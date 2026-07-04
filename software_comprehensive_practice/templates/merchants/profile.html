@@ -1,0 +1,60 @@
+{% extends 'merchants/base.html' %}
+
+{% block title %}店铺设置 - 商家后台{% endblock %}
+{% block nav_profile %}active{% endblock %}
+
+{% block content %}
+<h4 class="mb-4">店铺设置</h4>
+
+<div class="card">
+    <div class="card-body">
+        <table class="table">
+            <tr>
+                <th width="120">店铺名称</th>
+                <td>{{ merchant.shop_name }}</td>
+            </tr>
+            <tr>
+                <th>联系电话</th>
+                <td>{{ merchant.contact_phone }}</td>
+            </tr>
+            <tr>
+                <th>联系邮箱</th>
+                <td>{{ merchant.contact_email|default:"未设置" }}</td>
+            </tr>
+            <tr>
+                <th>店铺地址</th>
+                <td>{{ merchant.address }}</td>
+            </tr>
+            <tr>
+                <th>认证状态</th>
+                <td>
+                    {% if merchant.is_verified %}
+                        <span class="badge bg-success">已认证</span>
+                    {% else %}
+                        <span class="badge bg-warning">未认证</span>
+                    {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <th>营业状态</th>
+                <td>
+                    {% if merchant.is_active %}
+                        <span class="badge bg-success">营业中</span>
+                    {% else %}
+                        <span class="badge bg-secondary">已休息</span>
+                    {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <th>店铺简介</th>
+                <td>{{ merchant.shop_description|default:"暂无简介" }}</td>
+            </tr>
+            <tr>
+                <th>注册时间</th>
+                <td>{{ merchant.created_at|date:"Y-m-d H:i" }}</td>
+            </tr>
+        </table>
+        <a href="{% url 'merchants:profile_edit' %}" class="btn btn-primary">编辑信息</a>
+    </div>
+</div>
+{% endblock %}

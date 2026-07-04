@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+
+{% block title %}结算 - 在线商城{% endblock %}
+
+{% block content %}
+<h4 class="mb-4">确认订单</h4>
+
+<form method="post" action="{% url 'orders:create' %}">
+    {% csrf_token %}
+    
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">收货地址</h5>
+                </div>
+                <div class="card-body">
+                    {% if addresses %}
+                        {% for address in addresses %}
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="radio" name="address_id" 
+                                       value="{{ address.pk }}" id="address{{ address.pk }}"
+                                       {% if address.is_default or forloop.first %}checked{% endif %}>
+                                <label class="form-check-label w-100" for="address{{ address.pk }}">
+                                    <div class="border rounded p-3 {% if address.is_default %}border-primary bg-light{% endif %}">
+                                        <strong>{{ address.name }} {{ address.phone }}</strong>
+                                        {% if address.is_default %}<span class="badge bg-primary ms-2">默认</span>{% endif %}
+                                        <p class="mb-0 text-muted mt-1">{{ address.full_address }}</p>
+                                    </div>
+                                </label>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-3">
+                            <p class="text-muted mb-2">暂无收货地址</p>
+                            <a href="{% url 'users:address_add' %}" class="btn btn-outline-primary btn-sm">新增地址</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">订单商品</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table mb-0">
+                        <thead>
+                            <tr>
+                                <th>商品</th>
+                                <th width="100">单价</th>
+                                <th width="80">数量</th>
+                                <th width="100">小计</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in cart_items %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if item.goods.image %}
+                                                <img src="{{ item.goods.image.url }}" alt="" class="rounded me-2" style="width: 50px; height: 50px; object-fit: cover;">
+                                            {% endif %}
+                                            {{ item.goods.name }}
+                                        </div>
+                                    </td>
+                                    <td>¥{{ item.goods.price }}</td>
+                                    <td>{{ item.quantity }}</td>
+                                    <td class="text-danger">¥{{ item.subtotal }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-body">
+                    <label for="remark" class="form-label">订单备注</label>
+                    <textarea name="remark" id="remark" class="form-control" rows="2" placeholder="选填"></textarea>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">订单摘要</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>商品金额</span>
+                        <span>¥{{ total_price }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>运费</span>
+                        <span class="text-success">免运费</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between">
+                        <span class="fw-bold">合计</span>
+                        <span class="text-danger fw-bold" style="font-size: 1.5rem;">¥{{ total_price }}</span>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 mt-3" {% if not addresses %}disabled{% endif %}>
+                        提交订单
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}

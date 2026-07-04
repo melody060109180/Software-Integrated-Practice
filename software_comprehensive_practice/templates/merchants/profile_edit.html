@@ -1,0 +1,58 @@
+{% extends 'merchants/base.html' %}
+
+{% block title %}编辑店铺信息 - 商家后台{% endblock %}
+{% block nav_profile %}active{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'merchants:profile' %}">店铺设置</a></li>
+        <li class="breadcrumb-item active">编辑信息</li>
+    </ol>
+</nav>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">编辑店铺信息</h5>
+    </div>
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {% for field in form %}
+                <div class="mb-3">
+                    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                    {% if field.name == 'shop_description' %}
+                        <textarea name="{{ field.html_name }}" id="{{ field.id_for_label }}" 
+                                  class="form-control {% if field.errors %}is-invalid{% endif %}" 
+                                  rows="4">{{ field.value|default:'' }}</textarea>
+                    {% elif field.name == 'shop_logo' %}
+                        <input type="file" name="{{ field.html_name }}" id="{{ field.id_for_label }}" 
+                               class="form-control" accept="image/*">
+                        {% if field.value %}
+                            <div class="mt-2">
+                                <img src="{{ field.value.url }}" alt="" class="rounded" style="max-height: 100px;">
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <input type="{{ field.field.widget.input_type|default:'text' }}" 
+                               name="{{ field.html_name }}" 
+                               id="{{ field.id_for_label }}" 
+                               class="form-control {% if field.errors %}is-invalid{% endif %}"
+                               value="{{ field.value|default:'' }}"
+                               {% if field.field.required %}required{% endif %}>
+                    {% endif %}
+                    {% if field.errors %}
+                        <div class="invalid-feedback">
+                            {% for error in field.errors %}{{ error }}{% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">保存修改</button>
+                <a href="{% url 'merchants:profile' %}" class="btn btn-secondary">取消</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

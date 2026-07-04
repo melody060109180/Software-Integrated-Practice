@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block title %}首页 - 在线商城{% endblock %}
+
+{% block content %}
+<div class="promo-banner">
+    <h3><i class="bi bi-lightning-charge-fill"></i> 在线商城</h3>
+    <p>精选好物，品质生活，放心选购</p>
+</div>
+
+<div class="mb-4">
+    <h4 style="font-weight:700;"><i class="bi bi-fire" style="color:var(--primary);"></i> 全部商品</h4>
+</div>
+<div class="row">
+    {% for goods in all_goods %}
+        <div class="col-md-3 mb-4">
+            <a href="{% url 'goods:detail' goods.pk %}" class="text-decoration-none">
+                <div class="card h-100">
+                    {% if goods.image %}
+                        <img src="{{ goods.image.url }}" class="card-img-top" alt="{{ goods.name }}" style="height: 200px; object-fit: cover;">
+                    {% else %}
+                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                            <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
+                        </div>
+                    {% endif %}
+                    <div class="card-body">
+                        <h6 class="card-title text-truncate">{{ goods.name }}</h6>
+                        <div class="d-flex justify-content-between align-items-end">
+                            <span class="price-main">{{ goods.price }}</span>
+                            <span class="sales-text">已售{{ goods.sales }}件</span>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+    {% empty %}
+        <div class="col-12 text-center empty-state">
+            <i class="bi bi-inbox"></i>
+            <p>暂无商品</p>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

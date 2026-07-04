@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+
+# Django
+*.sqlite3
+db.sqlite3
+media/
+staticfiles/
+
+# Electron
+dist/
+out/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Archives
+*.zip
+*.rar
+*.7z
+
+# Environment
+.env
+.env.local
+.env.*.local

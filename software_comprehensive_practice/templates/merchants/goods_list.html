@@ -1,0 +1,99 @@
+{% extends 'merchants/base.html' %}
+
+{% block title %}商品管理 - 商家后台{% endblock %}
+{% block nav_goods %}active{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0">商品管理</h4>
+    <a href="{% url 'merchants:goods_add' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> 添加商品
+    </a>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <input type="text" name="keyword" class="form-control" placeholder="搜索商品名称" value="{{ keyword }}">
+            </div>
+            <div class="col-md-3">
+                <select name="status" class="form-select">
+                    <option value="">全部状态</option>
+                    <option value="active" {% if status == 'active' %}selected{% endif %}>上架中</option>
+                    <option value="inactive" {% if status == 'inactive' %}selected{% endif %}>已下架</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-outline-primary w-100">搜索</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>商品</th>
+                    <th>分类</th>
+                    <th>售价</th>
+                    <th>成本价</th>
+                    <th>库存</th>
+                    <th>销量</th>
+                    <th>状态</th>
+                    <th width="200">操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in merchant_goods %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                {% if item.goods.image %}
+                                    <img src="{{ item.goods.image.url }}" alt="" class="rounded me-2" style="width: 50px; height: 50px; object-fit: cover;">
+                                {% else %}
+                                    <div class="bg-light rounded d-flex align-items-center justify-content-center me-2" style="width: 50px; height: 50px;">
+                                        <i class="bi bi-image text-muted"></i>
+                                    </div>
+                                {% endif %}
+                                <span>{{ item.goods.name }}</span>
+                            </div>
+                        </td>
+                        <td>{{ item.goods.category|default:"-" }}</td>
+                        <td>¥{{ item.goods.price }}</td>
+                        <td>¥{{ item.cost_price }}</td>
+                        <td>{{ item.goods.stock }}</td>
+                        <td>{{ item.goods.sales }}</td>
+                        <td>
+                            {% if item.goods.is_active %}
+                                <span class="badge bg-success">上架中</span>
+                            {% else %}
+                                <span class="badge bg-secondary">已下架</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'merchants:goods_edit' item.pk %}" class="btn btn-outline-primary btn-sm">编辑</a>
+                            <a href="{% url 'merchants:goods_toggle' item.pk %}" class="btn btn-outline-{% if item.goods.is_active %}warning{% else %}success{% endif %} btn-sm">
+                                {% if item.goods.is_active %}下架{% else %}上架{% endif %}
+                            </a>
+                            <form method="post" action="{% url 'merchants:goods_delete' item.pk %}" class="d-inline" 
+                                  onsubmit="return confirm('确定删除该商品？')">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline-danger btn-sm">删除</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-4">
+                            暂无商品，<a href="{% url 'merchants:goods_add' %}">立即添加</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

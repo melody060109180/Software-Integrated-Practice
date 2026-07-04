@@ -1,0 +1,119 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}在线商城{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'goods:index' %}">
+                <i class="bi bi-shop"></i> 在线商城
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'goods:list' %}">全部商品</a>
+                    </li>
+                </ul>
+
+                <form class="d-flex me-3" action="{% url 'goods:search' %}" method="get">
+                    <input class="form-control me-2" type="search" name="keyword" placeholder="搜索你想要的商品" value="{{ keyword|default:'' }}">
+                    <button class="btn btn-outline-light" type="submit">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </form>
+                
+                <ul class="navbar-nav">
+                    {% if user.is_authenticated %}
+                        {% if user.is_staff %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'admin:index' %}">
+                                    <i class="bi bi-shield-lock"></i> 管理后台
+                                </a>
+                            </li>
+                        {% elif user.merchant %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'merchants:dashboard' %}">
+                                    <i class="bi bi-shop"></i> 商家后台
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'cart:detail' %}">
+                                    <i class="bi bi-cart3"></i> 购物车
+                                    {% if cart_count %}<span class="badge bg-danger ms-1">{{ cart_count }}</span>{% endif %}
+                                </a>
+                            </li>
+                        {% endif %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-person-circle"></i> {{ user.username }}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                {% if user.is_staff %}
+                                    <li><a class="dropdown-item" href="{% url 'admin:index' %}"><i class="bi bi-speedometer2 me-2"></i>管理后台</a></li>
+                                {% elif user.merchant %}
+                                    <li><a class="dropdown-item" href="{% url 'merchants:dashboard' %}"><i class="bi bi-speedometer2 me-2"></i>商家后台</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'merchants:profile' %}"><i class="bi bi-gear me-2"></i>店铺设置</a></li>
+                                {% else %}
+                                    <li><a class="dropdown-item" href="{% url 'users:profile' %}"><i class="bi bi-person me-2"></i>个人中心</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'orders:list' %}"><i class="bi bi-receipt me-2"></i>我的订单</a></li>
+                                {% endif %}
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <form method="post" action="{% url 'users:logout' %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="dropdown-item text-danger"><i class="bi bi-box-arrow-left me-2"></i>退出登录</button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'users:unified_login' %}">
+                                <i class="bi bi-box-arrow-in-right"></i> 登录
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'users:register' %}">注册</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container mt-4">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+        
+        {% block content %}{% endblock %}
+    </div>
+    
+    <footer class="mt-5 py-4">
+        <div class="container text-center">
+            <p>&copy; 2024 在线商城 - 软件综合实践项目</p>
+        </div>
+    </footer>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'js/main.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

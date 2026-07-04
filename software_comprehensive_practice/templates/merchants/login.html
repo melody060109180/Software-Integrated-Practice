@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block title %}商家登录 - 在线商城{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-header text-center">
+                <h4 class="mb-0"><i class="bi bi-shop"></i> 商家登录</h4>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="username" class="form-label">用户名</label>
+                        <input type="text" name="username" id="username" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">密码</label>
+                        <input type="password" name="password" id="password" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">登录</button>
+                </form>
+                <div class="text-center mt-3">
+                    <span class="text-muted">还没有商家账号？</span>
+                    <a href="{% url 'merchants:register' %}">立即注册</a>
+                </div>
+                <hr>
+                <div class="text-center">
+                    <a href="{% url 'users:login' %}" class="text-muted">普通用户登录</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block title %}商品列表 - 在线商城{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-3">
+        <div class="card mb-3">
+            <div class="card-body p-2">
+                <div class="list-group list-group-flush">
+                    <a href="{% url 'goods:list' %}" class="list-group-item list-group-item-action {% if not current_category %}active{% endif %}">
+                        <i class="bi bi-grid me-2"></i>全部商品
+                    </a>
+                    {% for category in categories %}
+                        <a href="{% url 'goods:category' category.pk %}" 
+                           class="list-group-item list-group-item-action {% if current_category == category.pk|slugify %}active{% endif %}">
+                            {{ category.name }}
+                        </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-9">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0" style="font-weight:700;">
+                {% if keyword %}<i class="bi bi-search me-2"></i>搜索结果：{{ keyword }}{% else %}<i class="bi bi-fire" style="color:var(--primary);"></i> 全部商品{% endif %}
+            </h5>
+            <div class="sort-btn-group btn-group">
+                <a class="btn {% if not current_sort or current_sort == '-created_at' %}active{% endif %}" href="?sort=-created_at{% if keyword %}&keyword={{ keyword }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}">最新</a>
+                <a class="btn {% if current_sort == 'sales' %}active{% endif %}" href="?sort=sales{% if keyword %}&keyword={{ keyword }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}">销量</a>
+                <a class="btn {% if current_sort == 'price' %}active{% endif %}" href="?sort=price{% if keyword %}&keyword={{ keyword }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}">价格↑</a>
+                <a class="btn {% if current_sort == '-price' %}active{% endif %}" href="?sort=-price{% if keyword %}&keyword={{ keyword }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}">价格↓</a>
+            </div>
+        </div>
+
+        <div class="row">
+            {% for goods in goods %}
+                <div class="col-md-3 mb-4">
+                    <a href="{% url 'goods:detail' goods.pk %}" class="text-decoration-none">
+                        <div class="card h-100">
+                            {% if goods.image %}
+                                <img src="{{ goods.image.url }}" class="card-img-top" alt="{{ goods.name }}" style="height: 200px; object-fit: cover;">
+                            {% else %}
+                                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                    <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
+                                </div>
+                            {% endif %}
+                            <div class="card-body">
+                                <h6 class="card-title text-truncate">{{ goods.name }}</h6>
+                                <div class="d-flex justify-content-between align-items-end">
+                                    <span class="price-main">{{ goods.price }}</span>
+                                    <span class="sales-text">已售{{ goods.sales }}件</span>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            {% empty %}
+                <div class="col-12 text-center empty-state">
+                    <i class="bi bi-inbox"></i>
+                    <p>暂无商品</p>
+                </div>
+            {% endfor %}
+        </div>
+
+        {% if goods.has_other_pages %}
+            <nav>
+                <ul class="pagination justify-content-center">
+                    {% if goods.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ goods.previous_page_number }}{% if keyword %}&keyword={{ keyword }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}">上一页</a>
+                        </li>
+                    {% endif %}
+                    {% for num in goods.paginator.page_range %}
+                        <li class="page-item {% if goods.number == num %}active{% endif %}">
+                            <a class="page-link" href="?page={{ num }}{% if keyword %}&keyword={{ keyword }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}">{{ num }}</a>
+                        </li>
+                    {% endfor %}
+                    {% if goods.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ goods.next_page_number }}{% if keyword %}&keyword={{ keyword }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}">下一页</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

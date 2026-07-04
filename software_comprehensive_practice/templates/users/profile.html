@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}个人中心 - 在线商城{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-3">
+        <div class="list-group">
+            <a href="{% url 'users:profile' %}" class="list-group-item list-group-item-action active">个人信息</a>
+            <a href="{% url 'users:profile_edit' %}" class="list-group-item list-group-item-action">修改信息</a>
+            <a href="{% url 'users:password_change' %}" class="list-group-item list-group-item-action">修改密码</a>
+            <a href="{% url 'users:address_list' %}" class="list-group-item list-group-item-action">收货地址</a>
+            <a href="{% url 'orders:list' %}" class="list-group-item list-group-item-action">我的订单</a>
+        </div>
+    </div>
+    <div class="col-md-9">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">个人信息</h4>
+            </div>
+            <div class="card-body">
+                <table class="table">
+                    <tr>
+                        <th width="120">用户名</th>
+                        <td>{{ user.username }}</td>
+                    </tr>
+                    <tr>
+                        <th>邮箱</th>
+                        <td>{{ user.email|default:"未设置" }}</td>
+                    </tr>
+                    <tr>
+                        <th>手机号</th>
+                        <td>{{ user.profile.phone|default:"未设置" }}</td>
+                    </tr>
+                    <tr>
+                        <th>出生日期</th>
+                        <td>{{ user.profile.birth_date|default:"未设置" }}</td>
+                    </tr>
+                    <tr>
+                        <th>注册时间</th>
+                        <td>{{ user.date_joined|date:"Y-m-d H:i" }}</td>
+                    </tr>
+                </table>
+                <a href="{% url 'users:profile_edit' %}" class="btn btn-primary">修改信息</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,137 @@
+{% extends 'merchants/base.html' %}
+
+{% block title %}数据概览 - 商家后台{% endblock %}
+{% block nav_dashboard %}active{% endblock %}
+
+{% block content %}
+<h4 class="mb-4">数据概览</h4>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card primary">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="text-muted mb-1">商品总数</h6>
+                        <h3>{{ total_goods }}</h3>
+                    </div>
+                    <i class="bi bi-box-seam text-primary" style="font-size: 2rem;"></i>
+                </div>
+                <small class="text-muted">上架中 {{ active_goods }}</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card success">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="text-muted mb-1">总销量</h6>
+                        <h3>{{ total_sales }}</h3>
+                    </div>
+                    <i class="bi bi-graph-up text-success" style="font-size: 2rem;"></i>
+                </div>
+                <small class="text-muted">本月 {{ month_sales }}</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card warning">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="text-muted mb-1">订单总数</h6>
+                        <h3>{{ total_orders }}</h3>
+                    </div>
+                    <i class="bi bi-receipt text-warning" style="font-size: 2rem;"></i>
+                </div>
+                <small class="text-muted">本月 {{ month_orders }}</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card info">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="text-muted mb-1">总收入</h6>
+                        <h3>¥{{ total_revenue|floatformat:2 }}</h3>
+                    </div>
+                    <i class="bi bi-currency-yen text-info" style="font-size: 2rem;"></i>
+                </div>
+                <small class="text-muted">本月 ¥{{ month_revenue|floatformat:2 }}</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">最近订单</h5>
+                <a href="{% url 'merchants:order_list' %}" class="btn btn-sm btn-outline-primary">查看全部</a>
+            </div>
+            <div class="card-body">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>订单号</th>
+                            <th>买家</th>
+                            <th>金额</th>
+                            <th>状态</th>
+                            <th>时间</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in recent_orders %}
+                            <tr>
+                                <td><a href="{% url 'merchants:order_detail' order.pk %}">{{ order.order_no|truncatechars:12 }}</a></td>
+                                <td>{{ order.user.username }}</td>
+                                <td class="text-danger">¥{{ order.total_amount }}</td>
+                                <td>
+                                    <span class="badge 
+                                        {% if order.status == 1 %}bg-warning
+                                        {% elif order.status == 2 %}bg-info
+                                        {% elif order.status == 3 %}bg-primary
+                                        {% elif order.status == 4 %}bg-success
+                                        {% else %}bg-secondary{% endif %}">
+                                        {{ order.status_text }}
+                                    </span>
+                                </td>
+                                <td>{{ order.created_at|date:"m-d H:i" }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted">暂无订单</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">快捷操作</h5>
+            </div>
+            <div class="card-body">
+                <a href="{% url 'merchants:goods_add' %}" class="btn btn-primary w-100 mb-2">
+                    <i class="bi bi-plus-circle"></i> 添加商品
+                </a>
+                <a href="{% url 'merchants:goods_list' %}" class="btn btn-outline-primary w-100 mb-2">
+                    <i class="bi bi-box-seam"></i> 管理商品
+                </a>
+                <a href="{% url 'merchants:order_list' %}" class="btn btn-outline-success w-100 mb-2">
+                    <i class="bi bi-receipt"></i> 处理订单
+                </a>
+                <a href="{% url 'merchants:profile_edit' %}" class="btn btn-outline-secondary w-100">
+                    <i class="bi bi-gear"></i> 店铺设置
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

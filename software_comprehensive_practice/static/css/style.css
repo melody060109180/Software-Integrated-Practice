@@ -1,0 +1,328 @@
+/* ========== 全局 ========== */
+:root {
+    --primary: #ff4d4f;
+    --primary-dark: #e8383a;
+    --primary-light: #fff1f0;
+    --accent: #ff7a45;
+    --bg: #f5f5f5;
+    --card-radius: 12px;
+    --btn-radius: 20px;
+}
+
+body {
+    background-color: var(--bg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+}
+
+a { text-decoration: none; }
+
+/* ========== 导航栏 ========== */
+.navbar {
+    position: relative;
+    z-index: 99999;
+    background: linear-gradient(135deg, #1a1a2e, #16213e) !important;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+    padding: 0.6rem 0;
+}
+.navbar-brand {
+    font-weight: 700;
+    font-size: 1.25rem;
+    letter-spacing: 1px;
+}
+.navbar .form-control {
+    border-radius: var(--btn-radius);
+    border: none;
+    padding: 0.4rem 1rem;
+    width: 260px;
+}
+.navbar .form-control:focus {
+    box-shadow: 0 0 0 2px rgba(255,255,255,0.3);
+}
+.navbar .btn-outline-light {
+    border-radius: var(--btn-radius);
+    border: none;
+    background: var(--primary);
+    color: #fff;
+}
+.navbar .btn-outline-light:hover {
+    background: var(--primary-dark);
+}
+
+/* 下拉菜单 */
+.dropdown-menu {
+    border: none;
+    border-radius: var(--card-radius);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    padding: 0.5rem 0;
+    z-index: 99999;
+}
+.dropdown-item {
+    padding: 0.5rem 1.2rem;
+    font-size: 0.9rem;
+}
+.dropdown-item:hover {
+    background: var(--primary-light);
+    color: var(--primary);
+}
+
+/* ========== 促销横幅 ========== */
+.promo-banner {
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    border-radius: var(--card-radius);
+    padding: 2rem 2.5rem;
+    color: #fff;
+    margin-bottom: 1.5rem;
+}
+.promo-banner h3 {
+    font-weight: 700;
+    margin-bottom: 0.3rem;
+}
+.promo-banner p {
+    opacity: 0.9;
+    margin-bottom: 0;
+}
+
+/* ========== 商品卡片 ========== */
+.card {
+    border: none;
+    border-radius: var(--card-radius);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    overflow: hidden;
+}
+.card-img-top {
+    border-radius: 0;
+}
+.card-body {
+    padding: 0.8rem 1rem;
+}
+.card-title {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 0.3rem;
+}
+
+/* 价格 */
+.price-main {
+    color: var(--primary);
+    font-size: 1.15rem;
+    font-weight: 700;
+}
+.price-main::before {
+    content: "¥";
+    font-size: 0.85rem;
+}
+.text-danger.fw-bold {
+    font-size: 1.15rem;
+}
+.sales-text {
+    color: #999;
+    font-size: 0.78rem;
+}
+
+/* ========== 分类侧边栏 ========== */
+.list-group-item {
+    border: none;
+    border-radius: 8px !important;
+    margin-bottom: 2px;
+    font-size: 0.9rem;
+    padding: 0.6rem 1rem;
+}
+.list-group-item.active {
+    background: var(--primary);
+    border-color: var(--primary);
+}
+
+/* ========== 排序按钮组 ========== */
+.sort-btn-group .btn {
+    border-radius: var(--btn-radius);
+    font-size: 0.85rem;
+    padding: 0.3rem 1rem;
+    border: 1px solid #e0e0e0;
+    color: #666;
+    background: #fff;
+}
+.sort-btn-group .btn.active,
+.sort-btn-group .btn:hover {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+}
+
+/* ========== 商品详情页 ========== */
+.detail-price-box {
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    color: #fff;
+    border-radius: var(--card-radius);
+    padding: 1.2rem 1.5rem;
+    margin-bottom: 1rem;
+}
+.detail-price-box .price-value {
+    font-size: 2rem;
+    font-weight: 700;
+}
+.detail-price-box .price-value::before {
+    content: "¥";
+    font-size: 1.2rem;
+}
+.detail-info-label {
+    color: #999;
+    font-size: 0.85rem;
+    width: 60px;
+}
+.detail-info-value {
+    color: #333;
+    font-size: 0.9rem;
+}
+.btn-add-cart {
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    border: none;
+    border-radius: var(--btn-radius);
+    padding: 0.6rem 2rem;
+    font-weight: 600;
+    color: #fff;
+}
+.btn-add-cart:hover {
+    opacity: 0.9;
+    color: #fff;
+}
+
+/* ========== 评价区 ========== */
+.review-card {
+    border-left: 3px solid var(--primary-light);
+}
+.star-rating {
+    color: #ffc107;
+    font-size: 1.2rem;
+}
+
+/* ========== 购物车 ========== */
+.table {
+    border-radius: var(--card-radius);
+    overflow: hidden;
+}
+.table thead {
+    background: #fafafa;
+}
+.table th {
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #666;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+/* ========== 按钮 ========== */
+.btn {
+    border-radius: 0.375rem;
+}
+.btn-primary {
+    background: var(--primary);
+    border-color: var(--primary);
+}
+.btn-primary:hover {
+    background: var(--primary-dark);
+    border-color: var(--primary-dark);
+}
+.btn-outline-primary {
+    color: var(--primary);
+    border-color: var(--primary);
+}
+.btn-outline-primary:hover {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+}
+
+/* ========== 表单 ========== */
+.form-control {
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    padding: 0.5rem 0.8rem;
+}
+.form-control:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(255,77,79,0.1);
+}
+
+/* ========== 徽章 ========== */
+.badge {
+    font-size: 0.72rem;
+    font-weight: 500;
+    border-radius: 6px;
+}
+.badge.bg-danger {
+    background: var(--primary) !important;
+}
+
+/* ========== 分页 ========== */
+.pagination .page-link {
+    border: none;
+    border-radius: 8px;
+    margin: 0 2px;
+    color: #666;
+    font-size: 0.9rem;
+}
+.pagination .page-item.active .page-link {
+    background: var(--primary);
+    color: #fff;
+}
+
+/* ========== 登录/注册卡片 ========== */
+.auth-card {
+    border: none;
+    border-radius: var(--card-radius);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+}
+.auth-card .card-header {
+    border-radius: var(--card-radius) var(--card-radius) 0 0 !important;
+    padding: 1.2rem;
+}
+.auth-card .card-body {
+    padding: 1.5rem;
+}
+
+/* ========== Footer ========== */
+footer {
+    background: #1a1a2e !important;
+    color: rgba(255,255,255,0.5);
+    border: none;
+}
+footer p {
+    margin-bottom: 0;
+    font-size: 0.85rem;
+}
+
+/* ========== 提示框 ========== */
+.alert {
+    border: none;
+    border-radius: var(--card-radius);
+}
+
+/* ========== 空状态 ========== */
+.empty-state {
+    padding: 4rem 0;
+    color: #ccc;
+}
+.empty-state i {
+    font-size: 4rem;
+}
+.empty-state p {
+    color: #999;
+    margin-top: 0.5rem;
+}
+
+/* ========== 响应式 ========== */
+@media (max-width: 768px) {
+    .navbar .form-control {
+        width: 160px;
+    }
+    .promo-banner {
+        padding: 1.5rem;
+    }
+    .promo-banner h3 {
+        font-size: 1.2rem;
+    }
+    .detail-price-box .price-value {
+        font-size: 1.5rem;
+    }
+}
