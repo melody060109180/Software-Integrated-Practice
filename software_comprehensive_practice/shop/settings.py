@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'apps.riders',
     'apps.management',
     'apps.favorites',
+    'apps.chats',
 ]
 
 MIDDLEWARE = [

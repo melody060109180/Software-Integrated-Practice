@@ -176,6 +176,12 @@
                 {% else %}
                     <p class="text-muted text-center">等待分配...</p>
                 {% endif %}
+
+                {% if order.delivery_status == 1 or order.delivery_status == 2 %}
+                    <a href="{% url 'chats:chat' order.pk %}" class="btn btn-outline-primary w-100 mt-2">
+                        <i class="bi bi-chat-dots"></i> 联系用户
+                    </a>
+                {% endif %}
             </div>
         </div>
     </div>

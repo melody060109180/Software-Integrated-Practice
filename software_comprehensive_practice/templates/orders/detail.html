@@ -91,6 +91,11 @@
                 <a href="{% url 'orders:confirm' order.pk %}" class="btn btn-success" 
                    onclick="return confirm('确认已收到货物？')">确认收货</a>
             {% endif %}
+            {% if order.delivery_status == 1 or order.delivery_status == 2 %}
+                <a href="{% url 'chats:chat' order.pk %}" class="btn btn-outline-primary">
+                    <i class="bi bi-chat-dots"></i> 联系对方
+                </a>
+            {% endif %}
             <a href="{% url 'orders:list' %}" class="btn btn-outline-secondary">返回订单列表</a>
         </div>
     </div>
