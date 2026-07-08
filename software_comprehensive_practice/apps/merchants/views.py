@@ -6,108 +6,73 @@ from django.db.models import Sum, Count, Q, F
 from django.utils import timezone
 from datetime import timedelta
 from .models import Merchant, MerchantGoods
-from .forms import MerchantRegisterForm, MerchantProfileForm, GoodsForm, MerchantGoodsForm
+from .forms import MerchantProfileForm, GoodsForm, MerchantGoodsForm
 from apps.goods.models import Goods, Category
 from apps.orders.models import Order, OrderItem
+from apps.riders.models import Rider
+from apps.orders.capacity import check_capacity, get_order_weight, get_order_volume, get_order_items_info
 
 
-def merchant_register(request):
-    """商家注册"""
-    if request.method == 'POST':
-        form = MerchantRegisterForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            # 创建商家信息
-            Merchant.objects.create(
-                user=user,
-                shop_name=form.cleaned_data['shop_name'],
-                contact_phone=form.cleaned_data['contact_phone'],
-                address=form.cleaned_data['address'],
-            )
-            # 自动登录
-            login(request, user)
-            messages.success(request, '商家注册成功！')
-            return redirect('merchants:dashboard')
-    else:
-        form = MerchantRegisterForm()
-    return render(request, 'merchants/register.html', {'form': form})
-
-
-def merchant_login(request):
-    """商家登录"""
-    if request.method == 'POST':
-        username = request.POST.get('username')
-        password = request.POST.get('password')
-        user = authenticate(request, username=username, password=password)
-        if user is not None and hasattr(user, 'merchant'):
-            login(request, user)
-            messages.success(request, '登录成功！')
-            return redirect('merchants:dashboard')
-        else:
-            messages.error(request, '用户名或密码错误，或该账号不是商家账号')
-    return render(request, 'merchants/login.html')
-
-
-@login_required
-def merchant_logout(request):
-    """商家登出"""
-    if request.method != 'POST':
-        return redirect('merchants:dashboard')
-    logout(request)
-    messages.success(request, '已退出登录')
-    return redirect('merchants:login')
+def _admin_required(user):
+    """检查用户是否是管理员（staff）"""
+    return user.is_staff
 
 
 @login_required
 def dashboard(request):
-    """商家后台首页 - 数据统计"""
-    merchant = get_object_or_404(Merchant, user=request.user)
-    
-    # 时间统计
+    """管理员后台首页 - 数据统计"""
+    if not request.user.is_staff:
+        messages.error(request, '无权访问！')
+        return redirect('goods:list')
+
     today = timezone.now().date()
     month_start = today.replace(day=1)
-    
+
     # 商品统计
-    total_goods = merchant.goods.count()
-    active_goods = merchant.goods.filter(goods__is_active=True).count()
-    
+    total_goods = Goods.objects.count()
+    active_goods = Goods.objects.filter(is_active=True).count()
+
     # 订单统计
-    merchant_goods_ids = merchant.goods.values_list('goods_id', flat=True)
-    total_orders = Order.objects.filter(items__goods_id__in=merchant_goods_ids).distinct().count()
-    month_orders = Order.objects.filter(
-        items__goods_id__in=merchant_goods_ids,
-        created_at__date__gte=month_start
-    ).distinct().count()
-    
+    total_orders = Order.objects.count()
+    month_orders = Order.objects.filter(created_at__date__gte=month_start).count()
+
     # 销售统计
     total_sales = OrderItem.objects.filter(
-        goods_id__in=merchant_goods_ids,
         order__status__in=[2, 3, 4]
     ).aggregate(total=Sum('quantity'))['total'] or 0
-    
+
     month_sales = OrderItem.objects.filter(
-        goods_id__in=merchant_goods_ids,
         order__status__in=[2, 3, 4],
         order__created_at__date__gte=month_start
     ).aggregate(total=Sum('quantity'))['total'] or 0
-    
+
     # 收入统计
     total_revenue = OrderItem.objects.filter(
-        goods_id__in=merchant_goods_ids,
         order__status__in=[2, 3, 4]
     ).aggregate(total=Sum(F('goods_price') * F('quantity')))['total'] or 0
-    
+
     month_revenue = OrderItem.objects.filter(
-        goods_id__in=merchant_goods_ids,
         order__status__in=[2, 3, 4],
         order__created_at__date__gte=month_start
     ).aggregate(total=Sum(F('goods_price') * F('quantity')))['total'] or 0
-    
+
+    # 骑手统计
+    total_riders = Rider.objects.count()
+    available_riders = Rider.objects.filter(is_available=True, is_active=True).count()
+
     # 最近订单
-    recent_orders = Order.objects.filter(
-        items__goods_id__in=merchant_goods_ids
-    ).distinct().order_by('-created_at')[:5]
-    
+    recent_orders = Order.objects.all().order_by('-created_at')[:5]
+
+    # 获取或创建店铺信息
+    merchant, _ = Merchant.objects.get_or_create(
+        user=request.user,
+        defaults={
+            'shop_name': '默认店铺',
+            'contact_phone': '',
+            'address': '',
+        }
+    )
+
     context = {
         'merchant': merchant,
         'total_goods': total_goods,
@@ -118,6 +83,8 @@ def dashboard(request):
         'month_sales': month_sales,
         'total_revenue': total_revenue,
         'month_revenue': month_revenue,
+        'total_riders': total_riders,
+        'available_riders': available_riders,
         'recent_orders': recent_orders,
     }
     return render(request, 'merchants/dashboard.html', context)
@@ -126,14 +93,20 @@ def dashboard(request):
 @login_required
 def profile(request):
     """商家信息"""
-    merchant = get_object_or_404(Merchant, user=request.user)
+    merchant, _ = Merchant.objects.get_or_create(
+        user=request.user,
+        defaults={'shop_name': '默认店铺', 'contact_phone': '', 'address': ''}
+    )
     return render(request, 'merchants/profile.html', {'merchant': merchant})
 
 
 @login_required
 def profile_edit(request):
     """编辑商家信息"""
-    merchant = get_object_or_404(Merchant, user=request.user)
+    merchant, _ = Merchant.objects.get_or_create(
+        user=request.user,
+        defaults={'shop_name': '默认店铺', 'contact_phone': '', 'address': ''}
+    )
     if request.method == 'POST':
         form = MerchantProfileForm(request.POST, request.FILES, instance=merchant)
         if form.is_valid():
@@ -147,25 +120,26 @@ def profile_edit(request):
 
 @login_required
 def goods_list(request):
-    """商品列表"""
-    merchant = get_object_or_404(Merchant, user=request.user)
+    """商品列表（管理员）"""
+    if not request.user.is_staff:
+        messages.error(request, '无权访问！')
+        return redirect('goods:list')
+
     keyword = request.GET.get('keyword', '')
     status = request.GET.get('status', '')
-    
-    merchant_goods = MerchantGoods.objects.filter(merchant=merchant).select_related('goods', 'goods__category')
-    
+
+    goods = Goods.objects.select_related('category').all()
+
     if keyword:
-        merchant_goods = merchant_goods.filter(
-            Q(goods__name__icontains=keyword) | Q(goods__description__icontains=keyword)
-        )
-    
+        goods = goods.filter(Q(name__icontains=keyword) | Q(description__icontains=keyword))
+
     if status == 'active':
-        merchant_goods = merchant_goods.filter(goods__is_active=True)
+        goods = goods.filter(is_active=True)
     elif status == 'inactive':
-        merchant_goods = merchant_goods.filter(goods__is_active=False)
-    
+        goods = goods.filter(is_active=False)
+
     return render(request, 'merchants/goods_list.html', {
-        'merchant_goods': merchant_goods,
+        'goods_list': goods,
         'keyword': keyword,
         'status': status,
     })
@@ -174,28 +148,21 @@ def goods_list(request):
 @login_required
 def goods_add(request):
     """添加商品"""
-    merchant = get_object_or_404(Merchant, user=request.user)
-    
+    if not request.user.is_staff:
+        messages.error(request, '无权访问！')
+        return redirect('goods:list')
+
     if request.method == 'POST':
         goods_form = GoodsForm(request.POST, request.FILES)
-        merchant_goods_form = MerchantGoodsForm(request.POST)
-        
-        if goods_form.is_valid() and merchant_goods_form.is_valid():
-            goods = goods_form.save()
-            merchant_goods = merchant_goods_form.save(commit=False)
-            merchant_goods.goods = goods
-            merchant_goods.merchant = merchant
-            merchant_goods.save()
-            
+        if goods_form.is_valid():
+            goods_form.save()
             messages.success(request, '商品添加成功！')
             return redirect('merchants:goods_list')
     else:
         goods_form = GoodsForm()
-        merchant_goods_form = MerchantGoodsForm()
-    
+
     return render(request, 'merchants/goods_form.html', {
         'goods_form': goods_form,
-        'merchant_goods_form': merchant_goods_form,
         'title': '添加商品',
     })
 
@@ -203,44 +170,38 @@ def goods_add(request):
 @login_required
 def goods_edit(request, pk):
     """编辑商品"""
-    merchant = get_object_or_404(Merchant, user=request.user)
-    merchant_goods = get_object_or_404(MerchantGoods, pk=pk, merchant=merchant)
-    goods = merchant_goods.goods
-    
+    if not request.user.is_staff:
+        messages.error(request, '无权访问！')
+        return redirect('goods:list')
+
+    goods = get_object_or_404(Goods, pk=pk)
+
     if request.method == 'POST':
         goods_form = GoodsForm(request.POST, request.FILES, instance=goods)
-        merchant_goods_form = MerchantGoodsForm(request.POST, instance=merchant_goods)
-        
-        if goods_form.is_valid() and merchant_goods_form.is_valid():
+        if goods_form.is_valid():
             goods_form.save()
-            merchant_goods_form.save()
-            
             messages.success(request, '商品更新成功！')
             return redirect('merchants:goods_list')
     else:
         goods_form = GoodsForm(instance=goods)
-        merchant_goods_form = MerchantGoodsForm(instance=merchant_goods)
-    
+
     return render(request, 'merchants/goods_form.html', {
         'goods_form': goods_form,
-        'merchant_goods_form': merchant_goods_form,
         'title': '编辑商品',
-        'merchant_goods': merchant_goods,
     })
 
 
 @login_required
 def goods_delete(request, pk):
     """删除商品"""
-    merchant = get_object_or_404(Merchant, user=request.user)
-    merchant_goods = get_object_or_404(MerchantGoods, pk=pk, merchant=merchant)
-    
+    if not request.user.is_staff:
+        messages.error(request, '无权访问！')
+        return redirect('goods:list')
+
+    goods = get_object_or_404(Goods, pk=pk)
     if request.method == 'POST':
-        goods = merchant_goods.goods
-        merchant_goods.delete()
         goods.delete()
         messages.success(request, '商品已删除！')
-    
     return redirect('merchants:goods_list')
 
 
@@ -249,39 +210,32 @@ def goods_toggle(request, pk):
     """上下架商品"""
     if request.method != 'POST':
         return redirect('merchants:goods_list')
-    merchant = get_object_or_404(Merchant, user=request.user)
-    merchant_goods = get_object_or_404(MerchantGoods, pk=pk, merchant=merchant)
-    
-    goods = merchant_goods.goods
+    if not request.user.is_staff:
+        messages.error(request, '无权访问！')
+        return redirect('goods:list')
+
+    goods = get_object_or_404(Goods, pk=pk)
     goods.is_active = not goods.is_active
     goods.save()
-    
+
     status = '上架' if goods.is_active else '下架'
     messages.success(request, f'商品已{status}！')
-    
     return redirect('merchants:goods_list')
 
 
 @login_required
 def order_list(request):
-    """订单列表"""
-    merchant = get_object_or_404(Merchant, user=request.user)
-    merchant_goods_ids = merchant.goods.values_list('goods_id', flat=True)
-    
+    """订单列表（管理员）"""
+    if not request.user.is_staff:
+        messages.error(request, '无权访问！')
+        return redirect('goods:list')
+
     status = request.GET.get('status', '')
-    
-    orders = Order.objects.filter(
-        items__goods_id__in=merchant_goods_ids
-    ).distinct().order_by('-created_at')
-    
+    orders = Order.objects.all().order_by('-created_at')
+
     if status:
         orders = orders.filter(status=status)
-    
-    # 为每个订单计算该商家的商品小计
-    for order in orders:
-        order.merchant_items = order.items.filter(goods_id__in=merchant_goods_ids)
-        order.merchant_subtotal = sum(item.subtotal for item in order.merchant_items)
-    
+
     return render(request, 'merchants/order_list.html', {
         'orders': orders,
         'status': status,
@@ -290,36 +244,131 @@ def order_list(request):
 
 @login_required
 def order_detail(request, pk):
-    """订单详情"""
-    merchant = get_object_or_404(Merchant, user=request.user)
-    merchant_goods_ids = merchant.goods.values_list('goods_id', flat=True)
-    
+    """订单详情（管理员）"""
+    if not request.user.is_staff:
+        messages.error(request, '无权访问！')
+        return redirect('goods:list')
+
     order = get_object_or_404(Order, pk=pk)
-    merchant_items = order.items.filter(goods_id__in=merchant_goods_ids)
-    merchant_subtotal = sum(item.subtotal for item in merchant_items)
+    idle_riders = Rider.objects.filter(is_available=True, is_active=True)
     
+    # 防爆单检查
+    is_safe, capacity_message, capacity_details = check_capacity(order)
+
     return render(request, 'merchants/order_detail.html', {
         'order': order,
-        'merchant_items': merchant_items,
-        'merchant_subtotal': merchant_subtotal,
+        'idle_riders': idle_riders,
+        'is_safe': is_safe,
+        'capacity_message': capacity_message,
+        'capacity_details': capacity_details,
     })
 
 
 @login_required
 def order_ship(request, pk):
-    """发货"""
+    """发货 + 自动派单"""
     if request.method != 'POST':
         return redirect('merchants:order_detail', pk=pk)
-    merchant = get_object_or_404(Merchant, user=request.user)
-    merchant_goods_ids = merchant.goods.values_list('goods_id', flat=True)
-    order = get_object_or_404(Order, pk=pk, items__goods_id__in=merchant_goods_ids)
-    
+    if not request.user.is_staff:
+        messages.error(request, '无权访问！')
+        return redirect('goods:list')
+
+    order = get_object_or_404(Order, pk=pk)
+
     if order.status == 2:  # 已支付
         order.status = 3  # 已发货
         order.shipped_at = timezone.now()
+
+        # 尝试自动派单
+        idle_riders = Rider.objects.filter(is_available=True, is_active=True).annotate(
+            active_deliveries=Count('deliveries', filter=Q(deliveries__delivery_status__in=[1, 2]))
+        ).order_by('active_deliveries')
+
+        if idle_riders.exists():
+            rider = idle_riders.first()
+            order.rider = rider
+            order.delivery_status = 1  # 待配送
+            order.assigned_at = timezone.now()
+            messages.success(request, f'订单已发货并指派给骑手 {rider.real_name}')
+        else:
+            messages.warning(request, '订单已发货，暂无空闲骑手，请手动指派')
+
         order.save()
-        messages.success(request, '订单已发货！')
     else:
         messages.error(request, '该订单无法发货')
-    
+
+    return redirect('merchants:order_detail', pk=pk)
+
+
+@login_required
+def rider_list(request):
+    """骑手列表（管理员）"""
+    if not request.user.is_staff:
+        messages.error(request, '无权访问！')
+        return redirect('goods:list')
+
+    from apps.riders.models import Rider
+    riders = Rider.objects.annotate(
+        active_deliveries=Count('deliveries', filter=Q(deliveries__delivery_status__in=[1, 2]))
+    ).order_by('-created_at')
+
+    return render(request, 'merchants/rider_list.html', {'riders': riders})
+
+
+@login_required
+def assign_rider(request, pk):
+    """手动指派骑手"""
+    if not request.user.is_staff:
+        messages.error(request, '无权访问！')
+        return redirect('goods:list')
+
+    order = get_object_or_404(Order, pk=pk)
+    from apps.riders.models import Rider
+
+    if request.method == 'POST':
+        rider_id = request.POST.get('rider_id')
+        if rider_id:
+            rider = get_object_or_404(Rider, pk=rider_id, is_available=True, is_active=True)
+            order.rider = rider
+            order.delivery_status = 1  # 待配送
+            order.assigned_at = timezone.now()
+            order.save()
+            messages.success(request, f'已指派骑手 {rider.real_name}')
+        else:
+            messages.error(request, '请选择骑手')
+        return redirect('merchants:order_detail', pk=pk)
+
+    idle_riders = Rider.objects.filter(is_available=True, is_active=True)
+    return render(request, 'merchants/assign_rider.html', {
+        'order': order,
+        'idle_riders': idle_riders,
+    })
+
+
+@login_required
+def auto_assign(request, pk):
+    """自动派单"""
+    if request.method != 'POST':
+        return redirect('merchants:order_detail', pk=pk)
+    if not request.user.is_staff:
+        messages.error(request, '无权访问！')
+        return redirect('goods:list')
+
+    order = get_object_or_404(Order, pk=pk)
+    from apps.riders.models import Rider
+
+    idle_riders = Rider.objects.filter(is_available=True, is_active=True).annotate(
+        active_deliveries=Count('deliveries', filter=Q(deliveries__delivery_status__in=[1, 2]))
+    ).order_by('active_deliveries')
+
+    if idle_riders.exists():
+        rider = idle_riders.first()
+        order.rider = rider
+        order.delivery_status = 1
+        order.assigned_at = timezone.now()
+        order.save()
+        messages.success(request, f'已自动指派给骑手 {rider.real_name}')
+    else:
+        messages.warning(request, '暂无空闲骑手')
+
     return redirect('merchants:order_detail', pk=pk)

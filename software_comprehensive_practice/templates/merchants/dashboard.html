@@ -1,6 +1,6 @@
 {% extends 'merchants/base.html' %}
 
-{% block title %}数据概览 - 商家后台{% endblock %}
+{% block title %}数据概览 - 管理后台{% endblock %}
 {% block nav_dashboard %}active{% endblock %}
 
 {% block content %}
@@ -65,6 +65,23 @@
     </div>
 </div>
 
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card stat-card" style="border-color:#6f42c1;">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="text-muted mb-1">骑手总数</h6>
+                        <h3>{{ total_riders }}</h3>
+                    </div>
+                    <i class="bi bi-bicycle text-purple" style="font-size: 2rem; color:#6f42c1;"></i>
+                </div>
+                <small class="text-muted">空闲 {{ available_riders }}</small>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="row">
     <div class="col-md-8">
         <div class="card">
@@ -80,6 +97,7 @@
                             <th>买家</th>
                             <th>金额</th>
                             <th>状态</th>
+                            <th>配送</th>
                             <th>时间</th>
                         </tr>
                     </thead>
@@ -90,7 +108,7 @@
                                 <td>{{ order.user.username }}</td>
                                 <td class="text-danger">¥{{ order.total_amount }}</td>
                                 <td>
-                                    <span class="badge 
+                                    <span class="badge
                                         {% if order.status == 1 %}bg-warning
                                         {% elif order.status == 2 %}bg-info
                                         {% elif order.status == 3 %}bg-primary
@@ -99,11 +117,23 @@
                                         {{ order.status_text }}
                                     </span>
                                 </td>
+                                <td>
+                                    <span class="badge
+                                        {% if order.delivery_status == 0 %}bg-secondary
+                                        {% elif order.delivery_status == 1 %}bg-warning
+                                        {% elif order.delivery_status == 2 %}bg-info
+                                        {% elif order.delivery_status == 3 %}bg-success{% endif %}">
+                                        {% if order.delivery_status == 0 %}未分配
+                                        {% elif order.delivery_status == 1 %}待配送
+                                        {% elif order.delivery_status == 2 %}配送中
+                                        {% elif order.delivery_status == 3 %}已送达{% endif %}
+                                    </span>
+                                </td>
                                 <td>{{ order.created_at|date:"m-d H:i" }}</td>
                             </tr>
                         {% empty %}
                             <tr>
-                                <td colspan="5" class="text-center text-muted">暂无订单</td>
+                                <td colspan="6" class="text-center text-muted">暂无订单</td>
                             </tr>
                         {% endfor %}
                     </tbody>
@@ -111,7 +141,7 @@
             </div>
         </div>
     </div>
-    
+
     <div class="col-md-4">
         <div class="card">
             <div class="card-header">
@@ -126,6 +156,9 @@
                 </a>
                 <a href="{% url 'merchants:order_list' %}" class="btn btn-outline-success w-100 mb-2">
                     <i class="bi bi-receipt"></i> 处理订单
+                </a>
+                <a href="{% url 'merchants:rider_list' %}" class="btn btn-outline-info w-100 mb-2">
+                    <i class="bi bi-bicycle"></i> 骑手管理
                 </a>
                 <a href="{% url 'merchants:profile_edit' %}" class="btn btn-outline-secondary w-100">
                     <i class="bi bi-gear"></i> 店铺设置

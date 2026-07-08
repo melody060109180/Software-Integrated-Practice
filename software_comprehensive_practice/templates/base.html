@@ -24,6 +24,11 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'goods:list' %}">全部商品</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'goods:bargain' %}" style="color: #ff4d4f;">
+                            <i class="bi bi-lightning-charge-fill"></i> 捡漏专区
+                        </a>
+                    </li>
                 </ul>
 
                 <form class="d-flex me-3" action="{% url 'goods:search' %}" method="get">
@@ -37,17 +42,22 @@
                     {% if user.is_authenticated %}
                         {% if user.is_staff %}
                             <li class="nav-item">
-                                <a class="nav-link" href="{% url 'admin:index' %}">
+                                <a class="nav-link" href="{% url 'merchants:dashboard' %}">
                                     <i class="bi bi-shield-lock"></i> 管理后台
                                 </a>
                             </li>
-                        {% elif user.merchant %}
+                        {% elif user.is_rider %}
                             <li class="nav-item">
-                                <a class="nav-link" href="{% url 'merchants:dashboard' %}">
-                                    <i class="bi bi-shop"></i> 商家后台
+                                <a class="nav-link" href="{% url 'riders:dashboard' %}">
+                                    <i class="bi bi-bicycle"></i> 骑手端
                                 </a>
                             </li>
                         {% else %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'favorites:list' %}">
+                                    <i class="bi bi-heart"></i> 收藏
+                                </a>
+                            </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="{% url 'cart:detail' %}">
                                     <i class="bi bi-cart3"></i> 购物车
@@ -61,12 +71,13 @@
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end">
                                 {% if user.is_staff %}
-                                    <li><a class="dropdown-item" href="{% url 'admin:index' %}"><i class="bi bi-speedometer2 me-2"></i>管理后台</a></li>
-                                {% elif user.merchant %}
-                                    <li><a class="dropdown-item" href="{% url 'merchants:dashboard' %}"><i class="bi bi-speedometer2 me-2"></i>商家后台</a></li>
-                                    <li><a class="dropdown-item" href="{% url 'merchants:profile' %}"><i class="bi bi-gear me-2"></i>店铺设置</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'merchants:dashboard' %}"><i class="bi bi-speedometer2 me-2"></i>管理后台</a></li>
+                                {% elif user.is_rider %}
+                                    <li><a class="dropdown-item" href="{% url 'riders:dashboard' %}"><i class="bi bi-speedometer2 me-2"></i>骑手端</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'riders:profile' %}"><i class="bi bi-person me-2"></i>个人资料</a></li>
                                 {% else %}
                                     <li><a class="dropdown-item" href="{% url 'users:profile' %}"><i class="bi bi-person me-2"></i>个人中心</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'favorites:list' %}"><i class="bi bi-heart me-2"></i>我的收藏</a></li>
                                     <li><a class="dropdown-item" href="{% url 'orders:list' %}"><i class="bi bi-receipt me-2"></i>我的订单</a></li>
                                 {% endif %}
                                 <li><hr class="dropdown-divider"></li>

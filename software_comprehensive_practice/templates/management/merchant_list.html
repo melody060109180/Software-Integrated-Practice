@@ -1,0 +1,129 @@
+{% extends 'management/base.html' %}
+
+{% block title %}商家管理 - 系统管理{% endblock %}
+{% block nav_merchants %}active{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0"><i class="bi bi-shop"></i> 商家管理</h4>
+    <span class="badge bg-primary">共 {{ merchants.paginator.count }} 家商家</span>
+</div>
+
+<!-- 搜索和筛选 -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-5">
+                <input type="text" class="form-control" name="keyword" 
+                       placeholder="搜索店铺名、用户名、电话..." 
+                       value="{{ request.GET.keyword }}">
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" name="status">
+                    <option value="">全部状态</option>
+                    <option value="verified" {% if request.GET.status == 'verified' %}selected{% endif %}>已认证</option>
+                    <option value="unverified" {% if request.GET.status == 'unverified' %}selected{% endif %}>未认证</option>
+                    <option value="inactive" {% if request.GET.status == 'inactive' %}selected{% endif %}>已停用</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-search"></i> 搜索
+                </button>
+                <a href="{% url 'management:merchant_list' %}" class="btn btn-outline-secondary">重置</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 商家列表 -->
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>ID</th>
+                    <th>店铺名</th>
+                    <th>用户名</th>
+                    <th>联系电话</th>
+                    <th>认证状态</th>
+                    <th>营业状态</th>
+                    <th>商品数</th>
+                    <th>注册时间</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for m in merchants %}
+                    <tr>
+                        <td>{{ m.id }}</td>
+                        <td><strong>{{ m.shop_name }}</strong></td>
+                        <td>{{ m.user.username }}</td>
+                        <td>{{ m.contact_phone|default:"-" }}</td>
+                        <td>
+                            {% if m.is_verified %}
+                                <span class="badge bg-success">已认证</span>
+                            {% else %}
+                                <span class="badge bg-warning">未认证</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if m.is_active %}
+                                <span class="badge bg-success">营业中</span>
+                            {% else %}
+                                <span class="badge bg-secondary">已停用</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ m.goods.count }}</td>
+                        <td>{{ m.created_at|date:"Y-m-d" }}</td>
+                        <td>
+                            <a href="{% url 'management:merchant_detail' m.pk %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i> 详情
+                            </a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="9" class="text-center text-muted py-4">暂无商家数据</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- 分页 -->
+{% if merchants.has_other_pages %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if merchants.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ merchants.previous_page_number }}{% if request.GET.keyword %}&keyword={{ request.GET.keyword }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                </li>
+            {% endif %}
+            
+            {% for num in merchants.paginator.page_range %}
+                {% if merchants.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                {% elif num > merchants.number|add:'-3' and num < merchants.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}{% if request.GET.keyword %}&keyword={{ request.GET.keyword }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">{{ num }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+            
+            {% if merchants.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ merchants.next_page_number }}{% if request.GET.keyword %}&keyword={{ request.GET.keyword }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+{% endif %}
+{% endblock %}

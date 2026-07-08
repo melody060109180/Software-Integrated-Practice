@@ -1,0 +1,65 @@
+{% extends 'merchants/base.html' %}
+
+{% block title %}指派骑手 - 管理后台{% endblock %}
+{% block nav_orders %}active{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0">指派骑手</h4>
+    <a href="{% url 'merchants:order_detail' order.pk %}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i> 返回订单
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">订单信息</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>订单号：</strong>{{ order.order_no }}</p>
+                <p><strong>收货人：</strong>{{ order.receiver_name }}</p>
+                <p><strong>电话：</strong>{{ order.receiver_phone }}</p>
+                <p><strong>地址：</strong>{{ order.receiver_address }}</p>
+                <p><strong>金额：</strong><span class="text-danger">¥{{ order.total_amount }}</span></p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">选择骑手</h5>
+            </div>
+            <div class="card-body">
+                {% if idle_riders %}
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="list-group mb-3">
+                            {% for rider in idle_riders %}
+                                <label class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <input type="radio" name="rider_id" value="{{ rider.id }}" class="form-check-input me-2"
+                                               {% if forloop.first %}checked{% endif %}>
+                                        <strong>{{ rider.real_name }}</strong>
+                                        <small class="text-muted ms-2">{{ rider.phone }}</small>
+                                    </div>
+                                    <span class="badge bg-success">空闲</span>
+                                </label>
+                            {% endfor %}
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-person-check"></i> 确认指派
+                        </button>
+                    </form>
+                {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="bi bi-person-x" style="font-size:2rem;"></i>
+                        <p class="mt-2">暂无空闲骑手</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

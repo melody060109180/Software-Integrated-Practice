@@ -10,6 +10,9 @@ from apps.goods.models import Goods
 def cart_detail(request):
     """购物车详情"""
     cart, _ = Cart.objects.get_or_create(user=request.user)
+    # 预加载关联数据，避免N+1查询
+    cart_items = cart.items.select_related('goods', 'goods__category').all()
+    cart._prefetched_items = cart_items
     return render(request, 'cart/cart.html', {'cart': cart})
 
 

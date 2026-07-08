@@ -14,6 +14,13 @@ class Order(models.Model):
         (5, '已取消'),
     ]
 
+    DELIVERY_STATUS_CHOICES = [
+        (0, '未分配'),
+        (1, '待配送'),
+        (2, '配送中'),
+        (3, '已送达'),
+    ]
+
     order_no = models.CharField('订单号', max_length=32, unique=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders')
     total_amount = models.DecimalField('订单总额', max_digits=10, decimal_places=2)
@@ -26,6 +33,18 @@ class Order(models.Model):
     paid_at = models.DateTimeField('支付时间', blank=True, null=True)
     shipped_at = models.DateTimeField('发货时间', blank=True, null=True)
     completed_at = models.DateTimeField('完成时间', blank=True, null=True)
+
+    # 配送相关字段
+    rider = models.ForeignKey(
+        'riders.Rider', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='deliveries',
+        verbose_name='配送骑手'
+    )
+    delivery_status = models.IntegerField(
+        '配送状态', choices=DELIVERY_STATUS_CHOICES, default=0
+    )
+    assigned_at = models.DateTimeField('指派时间', blank=True, null=True)
+    delivered_at = models.DateTimeField('送达时间', blank=True, null=True)
 
     class Meta:
         verbose_name = '订单'

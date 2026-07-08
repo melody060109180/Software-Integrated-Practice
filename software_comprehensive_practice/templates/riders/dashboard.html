@@ -1,0 +1,109 @@
+{% extends 'riders/base.html' %}
+
+{% block title %}骑手首页 - 骑手端{% endblock %}
+{% block nav_dashboard %}active{% endblock %}
+
+{% block content %}
+<h4 class="mb-4">工作台</h4>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card primary">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="text-muted mb-1">今日完成</h6>
+                        <h3>{{ today_completed }}</h3>
+                    </div>
+                    <i class="bi bi-check-circle text-primary" style="font-size: 2rem;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card warning">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="text-muted mb-1">待配送</h6>
+                        <h3>{{ pending }}</h3>
+                    </div>
+                    <i class="bi bi-clock text-warning" style="font-size: 2rem;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card info">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="text-muted mb-1">配送中</h6>
+                        <h3>{{ delivering }}</h3>
+                    </div>
+                    <i class="bi bi-truck text-info" style="font-size: 2rem;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card success">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="text-muted mb-1">总完成</h6>
+                        <h3>{{ total_completed }}</h3>
+                    </div>
+                    <i class="bi bi-trophy text-success" style="font-size: 2rem;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">当前状态</h5>
+                <span class="badge {% if rider.is_available %}bg-success{% else %}bg-secondary{% endif %}" style="font-size:0.9rem;">
+                    {% if rider.is_available %}空闲{% else %}忙碌{% endif %}
+                </span>
+            </div>
+            <div class="card-body">
+                <p>欢迎回来，<strong>{{ rider.real_name }}</strong>！</p>
+                <p>当前状态：<strong class="{% if rider.is_available %}text-success{% else %}text-secondary{% endif %}">
+                    {% if rider.is_available %}空闲 - 可接受新任务{% else %}忙碌 - 暂不接单{% endif %}
+                </strong></p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">快捷操作</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{% url 'riders:toggle_availability' %}" class="mb-2">
+                    {% csrf_token %}
+                    {% if rider.is_available %}
+                        <button type="submit" class="btn btn-warning w-100">
+                            <i class="bi bi-pause-circle"></i> 切换为忙碌
+                        </button>
+                    {% else %}
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="bi bi-play-circle"></i> 切换为空闲
+                        </button>
+                    {% endif %}
+                </form>
+                <a href="{% url 'riders:delivery_list' %}" class="btn btn-outline-primary w-100 mb-2">
+                    <i class="bi bi-truck"></i> 查看配送任务
+                </a>
+                <a href="{% url 'riders:history' %}" class="btn btn-outline-secondary w-100">
+                    <i class="bi bi-clock-history"></i> 配送历史
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

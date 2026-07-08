@@ -1,0 +1,182 @@
+{% extends 'management/base.html' %}
+
+{% block title %}用户详情 - 系统管理{% endblock %}
+{% block nav_users %}active{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0">
+        <i class="bi bi-person"></i> 用户详情
+    </h4>
+    <a href="{% url 'management:user_list' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> 返回列表
+    </a>
+</div>
+
+<div class="row">
+    <!-- 用户信息 -->
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">基本信息</h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    {% if target_user.profile.avatar %}
+                        <img src="{{ target_user.profile.avatar.url }}" alt="头像" 
+                             class="rounded-circle" style="width: 100px; height: 100px; object-fit: cover;">
+                    {% else %}
+                        <div class="rounded-circle bg-secondary d-inline-flex align-items-center justify-content-center" 
+                             style="width: 100px; height: 100px;">
+                            <i class="bi bi-person text-white" style="font-size: 3rem;"></i>
+                        </div>
+                    {% endif %}
+                    <h5 class="mt-3 mb-0">{{ target_user.username }}</h5>
+                    <small class="text-muted">ID: {{ target_user.id }}</small>
+                </div>
+                
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <strong>邮箱：</strong> {{ target_user.email|default:"未设置" }}
+                    </li>
+                    <li class="mb-2">
+                        <strong>手机：</strong> {{ target_user.profile.phone|default:"未设置" }}
+                    </li>
+                    <li class="mb-2">
+                        <strong>生日：</strong> {{ target_user.profile.birth_date|default:"未设置" }}
+                    </li>
+                    <li class="mb-2">
+                        <strong>状态：</strong>
+                        {% if target_user.is_active %}
+                            <span class="badge bg-success">正常</span>
+                        {% else %}
+                            <span class="badge bg-secondary">已禁用</span>
+                        {% endif %}
+                    </li>
+                    <li class="mb-2">
+                        <strong>注册时间：</strong> {{ target_user.date_joined|date:"Y-m-d H:i:s" }}
+                    </li>
+                    <li class="mb-2">
+                        <strong>最后登录：</strong> {{ target_user.last_login|date:"Y-m-d H:i:s"|default:"从未登录" }}
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- 操作按钮 -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">操作</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" id="actionForm">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" id="actionInput">
+                    
+                    <button type="button" class="btn btn-warning w-100 mb-2" onclick="toggleActive()">
+                        {% if target_user.is_active %}
+                            <i class="bi bi-lock"></i> 禁用用户
+                        {% else %}
+                            <i class="bi bi-unlock"></i> 启用用户
+                        {% endif %}
+                    </button>
+                    
+                    <button type="button" class="btn btn-danger w-100" onclick="confirmDelete()">
+                        <i class="bi bi-trash"></i> 删除用户
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 用户数据 -->
+    <div class="col-md-8">
+        <!-- 最近订单 -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-receipt"></i> 最近订单</h5>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>订单号</th>
+                            <th>金额</th>
+                            <th>状态</th>
+                            <th>时间</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in user_orders %}
+                            <tr>
+                                <td><a href="{% url 'management:order_detail' order.pk %}">{{ order.order_no|truncatechars:12 }}</a></td>
+                                <td class="text-danger">¥{{ order.total_amount }}</td>
+                                <td>
+                                    <span class="badge
+                                        {% if order.status == 1 %}bg-warning
+                                        {% elif order.status == 2 %}bg-info
+                                        {% elif order.status == 3 %}bg-primary
+                                        {% elif order.status == 4 %}bg-success
+                                        {% else %}bg-secondary{% endif %}">
+                                        {{ order.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>{{ order.created_at|date:"m-d H:i" }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">暂无订单</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- 最近评价 -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-star"></i> 最近评价</h5>
+            </div>
+            <div class="card-body">
+                {% for review in user_reviews %}
+                    <div class="border-bottom pb-3 mb-3">
+                        <div class="d-flex justify-content-between">
+                            <strong>{{ review.goods.name|truncatechars:20 }}</strong>
+                            <span class="text-warning">
+                                {% for i in "12345" %}
+                                    {% if forloop.counter <= review.rating %}
+                                        <i class="bi bi-star-fill"></i>
+                                    {% else %}
+                                        <i class="bi bi-star"></i>
+                                    {% endif %}
+                                {% endfor %}
+                            </span>
+                        </div>
+                        <p class="mb-1">{{ review.content|truncatechars:100 }}</p>
+                        <small class="text-muted">{{ review.created_at|date:"Y-m-d H:i" }}</small>
+                    </div>
+                {% empty %}
+                    <p class="text-center text-muted">暂无评价</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+function toggleActive() {
+    document.getElementById('actionInput').value = 'toggle_active';
+    document.getElementById('actionForm').submit();
+}
+
+function confirmDelete() {
+    if (confirm('确定要删除该用户吗？此操作不可恢复！')) {
+        document.getElementById('actionInput').value = 'delete';
+        document.getElementById('actionForm').submit();
+    }
+}
+</script>
+{% endblock %}
+{% endblock %}

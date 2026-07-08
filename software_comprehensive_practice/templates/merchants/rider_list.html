@@ -1,0 +1,48 @@
+{% extends 'merchants/base.html' %}
+
+{% block title %}骑手管理 - 管理后台{% endblock %}
+{% block nav_riders %}active{% endblock %}
+
+{% block content %}
+<h4 class="mb-4">骑手管理</h4>
+
+<div class="card">
+    <div class="card-body">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>姓名</th>
+                    <th>手机号</th>
+                    <th>身份证号</th>
+                    <th>状态</th>
+                    <th>当前配送</th>
+                    <th>注册时间</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for rider in riders %}
+                    <tr>
+                        <td>{{ rider.real_name }}</td>
+                        <td>{{ rider.phone }}</td>
+                        <td>{{ rider.id_number }}</td>
+                        <td>
+                            <span class="badge {% if rider.is_available %}bg-success{% else %}bg-secondary{% endif %}">
+                                {% if rider.is_available %}空闲{% else %}忙碌{% endif %}
+                            </span>
+                            {% if not rider.is_active %}
+                                <span class="badge bg-danger">已禁用</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ rider.active_deliveries }}</td>
+                        <td>{{ rider.created_at|date:"Y-m-d" }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">暂无骑手</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

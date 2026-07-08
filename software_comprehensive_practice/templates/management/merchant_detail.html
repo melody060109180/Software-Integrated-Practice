@@ -1,0 +1,176 @@
+{% extends 'management/base.html' %}
+
+{% block title %}商家详情 - 系统管理{% endblock %}
+{% block nav_merchants %}active{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0">
+        <i class="bi bi-shop"></i> 商家详情
+    </h4>
+    <a href="{% url 'management:merchant_list' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> 返回列表
+    </a>
+</div>
+
+<div class="row">
+    <!-- 商家信息 -->
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">店铺信息</h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    {% if merchant.shop_logo %}
+                        <img src="{{ merchant.shop_logo.url }}" alt="Logo" 
+                             class="rounded" style="width: 100px; height: 100px; object-fit: cover;">
+                    {% else %}
+                        <div class="rounded bg-primary d-inline-flex align-items-center justify-content-center" 
+                             style="width: 100px; height: 100px;">
+                            <i class="bi bi-shop text-white" style="font-size: 3rem;"></i>
+                        </div>
+                    {% endif %}
+                    <h5 class="mt-3 mb-0">{{ merchant.shop_name }}</h5>
+                    <small class="text-muted">ID: {{ merchant.id }}</small>
+                </div>
+                
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <strong>店主：</strong> {{ merchant.user.username }}
+                    </li>
+                    <li class="mb-2">
+                        <strong>联系电话：</strong> {{ merchant.contact_phone|default:"未设置" }}
+                    </li>
+                    <li class="mb-2">
+                        <strong>邮箱：</strong> {{ merchant.contact_email|default:"未设置" }}
+                    </li>
+                    <li class="mb-2">
+                        <strong>地址：</strong> {{ merchant.address|default:"未设置" }}
+                    </li>
+                    <li class="mb-2">
+                        <strong>简介：</strong> {{ merchant.shop_description|default:"暂无简介" }}
+                    </li>
+                    <li class="mb-2">
+                        <strong>认证状态：</strong>
+                        {% if merchant.is_verified %}
+                            <span class="badge bg-success">已认证</span>
+                        {% else %}
+                            <span class="badge bg-warning">未认证</span>
+                        {% endif %}
+                    </li>
+                    <li class="mb-2">
+                        <strong>营业状态：</strong>
+                        {% if merchant.is_active %}
+                            <span class="badge bg-success">营业中</span>
+                        {% else %}
+                            <span class="badge bg-secondary">已停用</span>
+                        {% endif %}
+                    </li>
+                    <li class="mb-2">
+                        <strong>注册时间：</strong> {{ merchant.created_at|date:"Y-m-d H:i:s" }}
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- 操作按钮 -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">操作</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" id="actionForm">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" id="actionInput">
+                    
+                    {% if not merchant.is_verified %}
+                        <button type="button" class="btn btn-success w-100 mb-2" onclick="setAction('verify')">
+                            <i class="bi bi-check-circle"></i> 认证商家
+                        </button>
+                    {% else %}
+                        <button type="button" class="btn btn-warning w-100 mb-2" onclick="setAction('revoke_verify')">
+                            <i class="bi bi-x-circle"></i> 撤销认证
+                        </button>
+                    {% endif %}
+                    
+                    <button type="button" class="btn btn-info w-100 mb-2" onclick="setAction('toggle_active')">
+                        {% if merchant.is_active %}
+                            <i class="bi bi-pause-circle"></i> 停用商家
+                        {% else %}
+                            <i class="bi bi-play-circle"></i> 启用商家
+                        {% endif %}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 商家商品 -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-box-seam"></i> 商家商品</h5>
+                <span class="badge bg-primary">{{ merchant_goods.count }} 件商品</span>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>商品名称</th>
+                            <th>价格</th>
+                            <th>库存</th>
+                            <th>销量</th>
+                            <th>成本价</th>
+                            <th>推荐</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for mg in merchant_goods %}
+                            <tr>
+                                <td><a href="{% url 'management:goods_detail' mg.goods.pk %}">{{ mg.goods.name|truncatechars:15 }}</a></td>
+                                <td class="text-danger">¥{{ mg.goods.price }}</td>
+                                <td>{{ mg.goods.stock }}</td>
+                                <td>{{ mg.goods.sales }}</td>
+                                <td>¥{{ mg.cost_price }}</td>
+                                <td>
+                                    {% if mg.is_featured %}
+                                        <i class="bi bi-star-fill text-warning"></i>
+                                    {% else %}
+                                        <i class="bi bi-star text-muted"></i>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if mg.goods.is_active %}
+                                        <span class="badge bg-success">上架</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">下架</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'management:goods_detail' mg.goods.pk %}" class="btn btn-sm btn-outline-primary">详情</a>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="8" class="text-center text-muted py-4">暂无商品</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+function setAction(action) {
+    document.getElementById('actionInput').value = action;
+    document.getElementById('actionForm').submit();
+}
+</script>
+{% endblock %}
+{% endblock %}

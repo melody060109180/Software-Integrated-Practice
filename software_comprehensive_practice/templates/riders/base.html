@@ -1,0 +1,116 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}骑手端{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+    <style>
+        .sidebar {
+            min-height: 100vh;
+            background: linear-gradient(180deg, #0d6efd, #0b5ed7);
+        }
+        .sidebar .nav-link {
+            color: rgba(255,255,255,.75);
+            padding: 12px 20px;
+            border-left: 3px solid transparent;
+            font-size: 0.9rem;
+            border-radius: 0 8px 8px 0;
+            margin-right: 8px;
+        }
+        .sidebar .nav-link.active {
+            color: #fff;
+            background: rgba(255,255,255,.15);
+            border-left-color: #fff;
+        }
+        .sidebar .nav-link:hover {
+            color: #fff;
+            background: rgba(255,255,255,.1);
+        }
+        .sidebar .nav-link i {
+            width: 24px;
+            margin-right: 10px;
+        }
+        .stat-card {
+            border: none;
+            border-radius: 12px;
+            border-left: 4px solid;
+        }
+        .stat-card.primary { border-color: #0d6efd; }
+        .stat-card.success { border-color: #198754; }
+        .stat-card.warning { border-color: #ffc107; }
+        .stat-card.info { border-color: #0dcaf0; }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <nav class="col-md-2 sidebar d-none d-md-block">
+                <div class="position-sticky pt-3">
+                    <div class="text-center py-4">
+                        <h5 class="text-white" style="font-weight:700;">
+                            <i class="bi bi-bicycle"></i> 骑手端
+                        </h5>
+                        <small style="color:rgba(255,255,255,0.6);">{{ user.rider.real_name }}</small>
+                    </div>
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link {% block nav_dashboard %}{% endblock %}" href="{% url 'riders:dashboard' %}">
+                                <i class="bi bi-speedometer2"></i> 首页
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% block nav_deliveries %}{% endblock %}" href="{% url 'riders:delivery_list' %}">
+                                <i class="bi bi-truck"></i> 配送任务
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% block nav_history %}{% endblock %}" href="{% url 'riders:history' %}">
+                                <i class="bi bi-clock-history"></i> 配送历史
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% block nav_profile %}{% endblock %}" href="{% url 'riders:profile' %}">
+                                <i class="bi bi-person"></i> 个人资料
+                            </a>
+                        </li>
+                        <li class="nav-item mt-4">
+                            <a class="nav-link" href="{% url 'goods:index' %}" target="_blank">
+                                <i class="bi bi-box-arrow-up-right"></i> 访问商城
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <form method="post" action="{% url 'riders:logout' %}">
+                                {% csrf_token %}
+                                <button type="submit" class="nav-link text-white-50" style="background:none;border:none;width:100%;text-align:left;cursor:pointer;">
+                                    <i class="bi bi-box-arrow-left"></i> 退出登录
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <main class="col-md-10 ms-auto py-4">
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

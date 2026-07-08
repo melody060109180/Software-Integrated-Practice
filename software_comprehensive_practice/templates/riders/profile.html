@@ -1,0 +1,44 @@
+{% extends 'riders/base.html' %}
+
+{% block title %}个人资料 - 骑手端{% endblock %}
+{% block nav_profile %}active{% endblock %}
+
+{% block content %}
+<h4 class="mb-4">个人资料</h4>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label text-muted">真实姓名</label>
+                    <p class="fw-bold">{{ rider.real_name }}</p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted">手机号</label>
+                    <p class="fw-bold">{{ rider.phone }}</p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted">身份证号</label>
+                    <p class="fw-bold">{{ rider.id_number }}</p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted">当前状态</label>
+                    <p>
+                        <span class="badge {% if rider.is_available %}bg-success{% else %}bg-secondary{% endif %}" style="font-size:0.9rem;">
+                            {% if rider.is_available %}空闲{% else %}忙碌{% endif %}
+                        </span>
+                    </p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted">注册时间</label>
+                    <p>{{ rider.created_at|date:"Y-m-d H:i" }}</p>
+                </div>
+                <a href="{% url 'riders:profile_edit' %}" class="btn btn-primary">
+                    <i class="bi bi-pencil"></i> 编辑资料
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

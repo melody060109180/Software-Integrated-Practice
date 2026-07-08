@@ -1,52 +1,325 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}支付 - 在线商城{% endblock %}
 
+{% block extra_css %}
+<style>
+    .pay-container {
+        max-width: 480px;
+        margin: 2rem auto;
+    }
+    .pay-card {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+        overflow: hidden;
+    }
+    .pay-header {
+        background: linear-gradient(135deg, #07c160, #06ad56);
+        color: #fff;
+        padding: 1.5rem;
+        text-align: center;
+    }
+    .pay-header.alipay {
+        background: linear-gradient(135deg, #1677ff, #0958d9);
+    }
+    .pay-amount {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 0.5rem 0;
+    }
+    .pay-amount::before {
+        content: "¥";
+        font-size: 1.5rem;
+    }
+    .pay-body {
+        padding: 2rem;
+    }
+    .method-tabs {
+        display: flex;
+        gap: 0;
+        margin-bottom: 1.5rem;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid #e8e8e8;
+    }
+    .method-tab {
+        flex: 1;
+        padding: 0.8rem;
+        text-align: center;
+        cursor: pointer;
+        border: none;
+        background: #fafafa;
+        font-size: 0.95rem;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+    }
+    .method-tab:not(:last-child) {
+        border-right: 1px solid #e8e8e8;
+    }
+    .method-tab.active {
+        background: #fff;
+        color: #07c160;
+        font-weight: 600;
+    }
+    .method-tab.active.alipay-tab {
+        color: #1677ff;
+    }
+    .method-tab i {
+        font-size: 1.2rem;
+    }
+    .qr-area {
+        text-align: center;
+        padding: 1.5rem 0;
+    }
+    .qr-wrapper {
+        display: inline-block;
+        padding: 12px;
+        border: 2px solid #f0f0f0;
+        border-radius: 12px;
+        background: #fff;
+    }
+    .qr-wrapper img {
+        width: 180px;
+        height: 180px;
+        display: block;
+    }
+    .qr-tip {
+        margin-top: 1rem;
+        color: #999;
+        font-size: 0.85rem;
+    }
+    .qr-tip i {
+        color: #07c160;
+    }
+    .order-info {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 1rem 1.2rem;
+        margin-bottom: 1.5rem;
+    }
+    .order-info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.4rem 0;
+        font-size: 0.9rem;
+    }
+    .order-info-row .label {
+        color: #999;
+    }
+    .order-info-row .value {
+        color: #333;
+        font-weight: 500;
+    }
+    .btn-pay {
+        width: 100%;
+        padding: 0.9rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        border-radius: 12px;
+        border: none;
+        color: #fff;
+        background: linear-gradient(135deg, #07c160, #06ad56);
+    }
+    .btn-pay:hover {
+        opacity: 0.9;
+        color: #fff;
+    }
+    .btn-pay.alipay-btn {
+        background: linear-gradient(135deg, #1677ff, #0958d9);
+    }
+    .btn-cancel {
+        width: 100%;
+        padding: 0.7rem;
+        font-size: 0.9rem;
+        border-radius: 12px;
+        margin-top: 0.8rem;
+    }
+    .countdown {
+        text-align: center;
+        margin-top: 1rem;
+        font-size: 0.85rem;
+        color: #999;
+    }
+    .countdown span {
+        color: var(--primary);
+        font-weight: 600;
+    }
+    .pay-steps {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+        padding: 0 1rem;
+    }
+    .pay-step {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 0.8rem;
+        color: #999;
+    }
+    .pay-step.active {
+        color: #07c160;
+        font-weight: 600;
+    }
+    .pay-step i {
+        font-size: 1rem;
+    }
+    .pay-step-arrow {
+        color: #ddd;
+        font-size: 0.7rem;
+    }
+    .hidden { display: none !important; }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header text-center">
-                <h4 class="mb-0">订单支付</h4>
+<div class="pay-container">
+    <div class="pay-card">
+        <!-- Header -->
+        <div class="pay-header" id="payHeader">
+            <div style="font-size: 0.9rem; opacity: 0.9;">确认支付</div>
+            <div class="pay-amount">{{ order.total_amount }}</div>
+            <div style="font-size: 0.85rem; opacity: 0.8;">订单号：{{ order.order_no|truncatechars:20 }}</div>
+        </div>
+
+        <div class="pay-body">
+            <!-- Steps -->
+            <div class="pay-steps">
+                <div class="pay-step active">
+                    <i class="bi bi-1-circle-fill"></i>
+                    <span>选择方式</span>
+                </div>
+                <div class="pay-step-arrow"><i class="bi bi-chevron-right"></i></div>
+                <div class="pay-step active">
+                    <i class="bi bi-2-circle-fill"></i>
+                    <span>扫码支付</span>
+                </div>
+                <div class="pay-step-arrow"><i class="bi bi-chevron-right"></i></div>
+                <div class="pay-step">
+                    <i class="bi bi-3-circle"></i>
+                    <span>完成</span>
+                </div>
             </div>
-            <div class="card-body">
-                <div class="text-center mb-4">
-                    <p class="text-muted">订单号：{{ order.order_no }}</p>
-                    <div class="text-danger fw-bold" style="font-size: 2.5rem;">¥{{ order.total_amount }}</div>
+
+            <!-- Payment Method Tabs -->
+            <div class="method-tabs">
+                <div class="method-tab active" onclick="switchMethod('wechat')" id="tabWechat">
+                    <i class="bi bi-wechat"></i> 微信支付
                 </div>
-                
-                <div class="mb-4">
-                    <label class="form-label">选择支付方式</label>
-                    <div class="form-check mb-2">
-                        <input class="form-check-input" type="radio" name="payment_method" id="alipay" value="1" checked>
-                        <label class="form-check-label" for="alipay">
-                            <i class="bi bi-alipay text-primary"></i> 支付宝
-                        </label>
-                    </div>
-                    <div class="form-check mb-2">
-                        <input class="form-check-input" type="radio" name="payment_method" id="wechat" value="2">
-                        <label class="form-check-label" for="wechat">
-                            <i class="bi bi-wechat text-success"></i> 微信支付
-                        </label>
-                    </div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="payment_method" id="card" value="3">
-                        <label class="form-check-label" for="card">
-                            <i class="bi bi-credit-card"></i> 银行卡
-                        </label>
-                    </div>
+                <div class="method-tab" onclick="switchMethod('alipay')" id="tabAlipay">
+                    <i class="bi bi-alipay"></i> 支付宝
                 </div>
-                
-                <div class="d-grid gap-2">
-                    <a href="{% url 'payments:success' order.pk %}" class="btn btn-primary btn-lg">
-                        确认支付
-                    </a>
-                    <a href="{% url 'payments:cancel' order.pk %}" class="btn btn-outline-secondary">
-                        取消支付
-                    </a>
+            </div>
+
+            <!-- QR Code Area -->
+            <div class="qr-area">
+                <div class="qr-wrapper">
+                    <img id="qrWechat" src="{% static 'images/wechat_pay_qr.png' %}" alt="微信支付二维码">
+                    <img id="qrAlipay" src="{% static 'images/alipay_qr.png' %}" alt="支付宝二维码" class="hidden">
                 </div>
+                <div class="qr-tip" id="qrTipWechat">
+                    <i class="bi bi-wechat"></i> 请使用微信扫一扫完成支付
+                </div>
+                <div class="qr-tip hidden" id="qrTipAlipay">
+                    <i class="bi bi-alipay"></i> 请使用支付宝扫一扫完成支付
+                </div>
+            </div>
+
+            <!-- Order Info -->
+            <div class="order-info">
+                <div class="order-info-row">
+                    <span class="label">商品金额</span>
+                    <span class="value">¥{{ order.total_amount }}</span>
+                </div>
+                <div class="order-info-row">
+                    <span class="label">收货人</span>
+                    <span class="value">{{ order.receiver_name }}</span>
+                </div>
+                <div class="order-info-row">
+                    <span class="label">收货地址</span>
+                    <span class="value" style="text-align:right; max-width:60%;">{{ order.receiver_address|truncatechars:30 }}</span>
+                </div>
+            </div>
+
+            <!-- Pay Button -->
+            <form method="post" action="{% url 'payments:success' order.pk %}" id="payForm">
+                {% csrf_token %}
+                <input type="hidden" name="payment_method" id="paymentMethod" value="2">
+                <button type="submit" class="btn btn-pay" id="btnPay">
+                    <i class="bi bi-shield-check me-1"></i> 我已支付
+                </button>
+            </form>
+
+            <button class="btn btn-outline-secondary btn-cancel" onclick="location.href='{% url 'payments:cancel' order.pk %}'">
+                取消支付
+            </button>
+
+            <div class="countdown">
+                支付剩余时间：<span id="countdown">14:59</span>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let currentMethod = 'wechat';
+
+    function switchMethod(method) {
+        currentMethod = method;
+        const header = document.getElementById('payHeader');
+        const tabWechat = document.getElementById('tabWechat');
+        const tabAlipay = document.getElementById('tabAlipay');
+        const qrWechat = document.getElementById('qrWechat');
+        const qrAlipay = document.getElementById('qrAlipay');
+        const tipWechat = document.getElementById('qrTipWechat');
+        const tipAlipay = document.getElementById('qrTipAlipay');
+        const btnPay = document.getElementById('btnPay');
+        const methodInput = document.getElementById('paymentMethod');
+
+        if (method === 'wechat') {
+            header.classList.remove('alipay');
+            tabWechat.classList.add('active');
+            tabAlipay.classList.remove('active');
+            qrWechat.classList.remove('hidden');
+            qrAlipay.classList.add('hidden');
+            tipWechat.classList.remove('hidden');
+            tipAlipay.classList.add('hidden');
+            btnPay.classList.remove('alipay-btn');
+            methodInput.value = '2';
+        } else {
+            header.classList.add('alipay');
+            tabWechat.classList.remove('active');
+            tabAlipay.classList.add('active', 'alipay-tab');
+            qrWechat.classList.add('hidden');
+            qrAlipay.classList.remove('hidden');
+            tipWechat.classList.add('hidden');
+            tipAlipay.classList.remove('hidden');
+            btnPay.classList.add('alipay-btn');
+            methodInput.value = '1';
+        }
+    }
+
+    // Countdown timer
+    let totalSeconds = 15 * 60 - 1;
+    const countdownEl = document.getElementById('countdown');
+    const timer = setInterval(function() {
+        if (totalSeconds <= 0) {
+            clearInterval(timer);
+            countdownEl.textContent = '00:00';
+            return;
+        }
+        totalSeconds--;
+        const min = Math.floor(totalSeconds / 60);
+        const sec = totalSeconds % 60;
+        countdownEl.textContent = String(min).padStart(2, '0') + ':' + String(sec).padStart(2, '0');
+    }, 1000);
+</script>
 {% endblock %}

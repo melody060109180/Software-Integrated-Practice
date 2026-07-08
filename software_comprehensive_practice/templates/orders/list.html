@@ -66,12 +66,18 @@
                     <a href="{% url 'orders:detail' order.pk %}" class="btn btn-outline-primary btn-sm">查看详情</a>
                     {% if order.status == 1 %}
                         <a href="{% url 'payments:pay' order.pk %}" class="btn btn-primary btn-sm">去支付</a>
-                        <a href="{% url 'orders:cancel' order.pk %}" class="btn btn-outline-danger btn-sm" 
-                           onclick="return confirm('确定取消订单？')">取消订单</a>
+                        <form method="post" action="{% url 'orders:cancel' order.pk %}" class="d-inline"
+                              onsubmit="return confirm('确定取消订单？')">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-danger btn-sm">取消订单</button>
+                        </form>
                     {% endif %}
                     {% if order.status == 3 %}
-                        <a href="{% url 'orders:confirm' order.pk %}" class="btn btn-success btn-sm" 
-                           onclick="return confirm('确认已收到货物？')">确认收货</a>
+                        <form method="post" action="{% url 'orders:confirm' order.pk %}" class="d-inline"
+                              onsubmit="return confirm('确认已收到货物？')">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success btn-sm">确认收货</button>
+                        </form>
                     {% endif %}
                 </div>
             </div>

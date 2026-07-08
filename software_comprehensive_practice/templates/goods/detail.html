@@ -31,11 +31,40 @@
                 {% if goods.category %}
                     <span class="badge" style="background:var(--primary-light); color:var(--primary);">{{ goods.category }}</span>
                 {% endif %}
+                {% if goods.discount_text %}
+                    <span class="badge bg-danger ms-2">{{ goods.discount_text }}</span>
+                {% endif %}
                 
                 <div class="detail-price-box mt-3">
-                    <span class="price-value">{{ goods.price }}</span>
+                    {% if goods.discount_rate < 1 %}
+                        <span class="text-muted text-decoration-line-through" style="font-size: 1rem; opacity: 0.7;">¥{{ goods.price }}</span>
+                        <span class="price-value ms-2" style="color: #ff4d4f;">¥{{ goods.current_price }}</span>
+                    {% else %}
+                        <span class="price-value">¥{{ goods.price }}</span>
+                    {% endif %}
                     <span class="ms-3" style="opacity:0.9;">已售 {{ goods.sales }} 件</span>
                 </div>
+
+                {% if goods.days_until_expiry is not None %}
+                    <div class="mt-2 p-2 rounded" style="background: {% if goods.days_until_expiry < 0 %}#fff2f0{% elif goods.days_until_expiry <= 7 %}#fff7e6{% elif goods.days_until_expiry <= 14 %}#fffbe6{% else %}#f6ffed{% endif %};">
+                        <small>
+                            <i class="bi bi-clock-history me-1"></i>
+                            {% if goods.days_until_expiry < 0 %}
+                                <span class="text-danger">已过期 {{ goods.days_until_expiry|cut:"-" }} 天</span>
+                            {% elif goods.days_until_expiry == 0 %}
+                                <span class="text-danger">今日到期</span>
+                            {% elif goods.days_until_expiry <= 3 %}
+                                <span class="text-danger">仅剩 {{ goods.days_until_expiry }} 天到期</span>
+                            {% elif goods.days_until_expiry <= 7 %}
+                                <span class="text-warning">剩余 {{ goods.days_until_expiry }} 天到期</span>
+                            {% elif goods.days_until_expiry <= 14 %}
+                                <span class="text-primary">剩余 {{ goods.days_until_expiry }} 天到期</span>
+                            {% else %}
+                                <span class="text-success">保质期至 {{ goods.expiry_date }}</span>
+                            {% endif %}
+                        </small>
+                    </div>
+                {% endif %}
                 
                 <div class="d-flex align-items-center gap-4 my-3">
                     <div>
@@ -55,6 +84,10 @@
                             {{ goods.average_rating|floatformat:1 }}
                         </span>
                     </div>
+                    <div>
+                        <span class="detail-info-label">重量</span>
+                        <span class="detail-info-value">{{ goods.weight_text }}</span>
+                    </div>
                 </div>
                 
                 {% if goods.stock > 0 %}
@@ -69,6 +102,18 @@
                                 <i class="bi bi-cart-plus"></i> 加入购物车
                             </button>
                         </form>
+                        <div class="mt-3">
+                            <form method="post" action="{% url 'favorites:toggle' goods.pk %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline-{% if is_favorited %}danger{% else %}secondary{% endif %}">
+                                    <i class="bi bi-heart{% if is_favorited %}-fill{% endif %}"></i> 
+                                    {% if is_favorited %}已收藏{% else %}收藏{% endif %}
+                                </button>
+                            </form>
+                            <a href="{% url 'favorites:list' %}" class="btn btn-outline-secondary ms-2">
+                                <i class="bi bi-heart"></i> 我的收藏
+                            </a>
+                        </div>
                     {% else %}
                         <a href="{% url 'users:unified_login' %}" class="btn btn-add-cart mt-4">
                             <i class="bi bi-cart-plus"></i> 加入购物车
@@ -120,27 +165,88 @@
 {% endif %}
 
 {% if related_goods %}
-<h5 class="mb-3" style="font-weight:700;"><i class="bi bi-grid me-2" style="color:var(--primary);"></i>相关商品</h5>
-<div class="row">
-    {% for item in related_goods %}
-        <div class="col-md-3 mb-4">
-            <a href="{% url 'goods:detail' item.pk %}" class="text-decoration-none">
-                <div class="card h-100">
-                    {% if item.image %}
-                        <img src="{{ item.image.url }}" class="card-img-top" style="height: 150px; object-fit: cover;">
-                    {% else %}
-                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 150px;">
-                            <i class="bi bi-image text-muted"></i>
+<div class="card mb-4">
+    <div class="card-header" style="background: linear-gradient(135deg, #ff4d4f, #ff7a45); border:none;">
+        <h5 class="mb-0 text-white" style="font-weight:700;">
+            <i class="bi bi-heart me-2"></i>为你推荐
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            {% for item in related_goods %}
+                <div class="col-md-2 col-4 mb-3">
+                    <a href="{% url 'goods:detail' item.pk %}" class="text-decoration-none">
+                        <div class="card h-100 position-relative border-0 shadow-sm">
+                            {% if item.discount_text %}
+                                <span class="badge bg-danger position-absolute top-0 end-0 m-1" style="z-index:10; font-size: 0.65rem;">
+                                    {{ item.discount_text }}
+                                </span>
+                            {% endif %}
+                            {% if item.image %}
+                                <img src="{{ item.image.url }}" class="card-img-top" style="height: 120px; object-fit: cover;">
+                            {% else %}
+                                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 120px;">
+                                    <i class="bi bi-image text-muted"></i>
+                                </div>
+                            {% endif %}
+                            <div class="card-body p-2">
+                                <h6 class="card-title text-truncate small mb-1">{{ item.name }}</h6>
+                                {% if item.discount_rate < 1 %}
+                                    <span class="text-muted text-decoration-line-through" style="font-size: 0.7rem;">¥{{ item.price }}</span>
+                                    <span class="text-danger small">¥{{ item.current_price }}</span>
+                                {% else %}
+                                    <span class="text-danger small">¥{{ item.price }}</span>
+                                {% endif %}
+                            </div>
                         </div>
-                    {% endif %}
-                    <div class="card-body">
-                        <h6 class="card-title text-truncate">{{ item.name }}</h6>
-                        <span class="price-main">{{ item.price }}</span>
-                    </div>
+                    </a>
                 </div>
-            </a>
+            {% endfor %}
         </div>
-    {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% if personal_recommendations %}
+<div class="card mb-4">
+    <div class="card-header" style="background: linear-gradient(135deg, #1890ff, #36cfc9); border:none;">
+        <h5 class="mb-0 text-white" style="font-weight:700;">
+            <i class="bi bi-stars me-2"></i>猜你喜欢
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            {% for item in personal_recommendations %}
+                <div class="col-md-3 col-6 mb-3">
+                    <a href="{% url 'goods:detail' item.pk %}" class="text-decoration-none">
+                        <div class="card h-100 position-relative border-0 shadow-sm">
+                            {% if item.discount_text %}
+                                <span class="badge bg-danger position-absolute top-0 end-0 m-1" style="z-index:10; font-size: 0.65rem;">
+                                    {{ item.discount_text }}
+                                </span>
+                            {% endif %}
+                            {% if item.image %}
+                                <img src="{{ item.image.url }}" class="card-img-top" style="height: 140px; object-fit: cover;">
+                            {% else %}
+                                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 140px;">
+                                    <i class="bi bi-image text-muted"></i>
+                                </div>
+                            {% endif %}
+                            <div class="card-body p-2">
+                                <h6 class="card-title text-truncate small mb-1">{{ item.name }}</h6>
+                                {% if item.discount_rate < 1 %}
+                                    <span class="text-muted text-decoration-line-through" style="font-size: 0.7rem;">¥{{ item.price }}</span>
+                                    <span class="text-danger small">¥{{ item.current_price }}</span>
+                                {% else %}
+                                    <span class="text-danger small">¥{{ item.price }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
 </div>
 {% endif %}
 {% endblock %}

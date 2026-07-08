@@ -1,0 +1,140 @@
+{% extends 'management/base.html' %}
+
+{% block title %}商品管理 - 系统管理{% endblock %}
+{% block nav_goods %}active{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0"><i class="bi bi-box-seam"></i> 商品管理</h4>
+    <span class="badge bg-primary">共 {{ goods.paginator.count }} 件商品</span>
+</div>
+
+<!-- 搜索和筛选 -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <input type="text" class="form-control" name="keyword" 
+                       placeholder="搜索商品名称、描述..." 
+                       value="{{ request.GET.keyword }}">
+            </div>
+            <div class="col-md-2">
+                <select class="form-select" name="status">
+                    <option value="">全部状态</option>
+                    <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>上架</option>
+                    <option value="inactive" {% if request.GET.status == 'inactive' %}selected{% endif %}>下架</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" name="category">
+                    <option value="">全部分类</option>
+                    {% for cat in categories %}
+                        <option value="{{ cat.pk }}" {% if request.GET.category == cat.pk|stringformat:"d" %}selected{% endif %}>{{ cat.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-search"></i> 搜索
+                </button>
+                <a href="{% url 'management:goods_list' %}" class="btn btn-outline-secondary">重置</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 商品列表 -->
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>ID</th>
+                    <th>商品名称</th>
+                    <th>分类</th>
+                    <th>价格</th>
+                    <th>库存</th>
+                    <th>销量</th>
+                    <th>商家</th>
+                    <th>状态</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for g in goods %}
+                    <tr>
+                        <td>{{ g.id }}</td>
+                        <td>
+                            <strong>{{ g.name|truncatechars:15 }}</strong>
+                        </td>
+                        <td>{{ g.category.name|default:"-" }}</td>
+                        <td class="text-danger fw-bold">¥{{ g.price }}</td>
+                        <td>
+                            {% if g.stock <= 0 %}
+                                <span class="text-danger">{{ g.stock }}</span>
+                            {% elif g.stock <= 10 %}
+                                <span class="text-warning">{{ g.stock }}</span>
+                            {% else %}
+                                {{ g.stock }}
+                            {% endif %}
+                        </td>
+                        <td>{{ g.sales }}</td>
+                        <td>{{ g.merchant_goods.merchant.shop_name|default:"-" }}</td>
+                        <td>
+                            {% if g.is_active %}
+                                <span class="badge bg-success">上架</span>
+                            {% else %}
+                                <span class="badge bg-secondary">下架</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'management:goods_detail' g.pk %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i> 详情
+                            </a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="9" class="text-center text-muted py-4">暂无商品数据</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- 分页 -->
+{% if goods.has_other_pages %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if goods.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ goods.previous_page_number }}{% if request.GET.keyword %}&keyword={{ request.GET.keyword }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                </li>
+            {% endif %}
+            
+            {% for num in goods.paginator.page_range %}
+                {% if goods.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                {% elif num > goods.number|add:'-3' and num < goods.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}{% if request.GET.keyword %}&keyword={{ request.GET.keyword }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}">{{ num }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+            
+            {% if goods.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ goods.next_page_number }}{% if request.GET.keyword %}&keyword={{ request.GET.keyword }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+{% endif %}
+{% endblock %}

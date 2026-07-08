@@ -1,6 +1,6 @@
 {% extends 'merchants/base.html' %}
 
-{% block title %}订单管理 - 商家后台{% endblock %}
+{% block title %}订单管理 - 管理后台{% endblock %}
 {% block nav_orders %}active{% endblock %}
 
 {% block content %}
@@ -32,14 +32,26 @@
                     <span class="text-muted">订单号：{{ order.order_no }}</span>
                     <span class="ms-3 text-muted">{{ order.created_at|date:"Y-m-d H:i" }}</span>
                 </div>
-                <span class="badge 
-                    {% if order.status == 1 %}bg-warning
-                    {% elif order.status == 2 %}bg-info
-                    {% elif order.status == 3 %}bg-primary
-                    {% elif order.status == 4 %}bg-success
-                    {% else %}bg-secondary{% endif %}">
-                    {{ order.status_text }}
-                </span>
+                <div>
+                    <span class="badge
+                        {% if order.status == 1 %}bg-warning
+                        {% elif order.status == 2 %}bg-info
+                        {% elif order.status == 3 %}bg-primary
+                        {% elif order.status == 4 %}bg-success
+                        {% else %}bg-secondary{% endif %}">
+                        {{ order.status_text }}
+                    </span>
+                    <span class="badge
+                        {% if order.delivery_status == 0 %}bg-secondary
+                        {% elif order.delivery_status == 1 %}bg-warning
+                        {% elif order.delivery_status == 2 %}bg-info
+                        {% elif order.delivery_status == 3 %}bg-success{% endif %} ms-1">
+                        {% if order.delivery_status == 0 %}未分配
+                        {% elif order.delivery_status == 1 %}待配送
+                        {% elif order.delivery_status == 2 %}配送中
+                        {% elif order.delivery_status == 3 %}已送达{% endif %}
+                    </span>
+                </div>
             </div>
             <div class="card-body">
                 <div class="row">
@@ -48,31 +60,21 @@
                         <p class="mb-1"><strong>收货人：</strong>{{ order.receiver_name }} {{ order.receiver_phone }}</p>
                         <p class="mb-0"><strong>地址：</strong>{{ order.receiver_address }}</p>
                     </div>
-                    <div class="col-md-6">
-                        {% for item in order.merchant_items %}
-                            <div class="d-flex align-items-center mb-2 {% if not forloop.last %}pb-2 border-bottom{% endif %}">
-                                {% if item.goods_image %}
-                                    <img src="{{ item.goods_image }}" alt="" class="rounded me-2" style="width: 40px; height: 40px; object-fit: cover;">
-                                {% endif %}
-                                <div class="flex-grow-1">
-                                    <div>{{ item.goods_name }}</div>
-                                    <small class="text-muted">¥{{ item.goods_price }} x {{ item.quantity }}</small>
-                                </div>
-                            </div>
-                        {% endfor %}
+                    <div class="col-md-3">
+                        <p class="mb-1"><strong>金额：</strong><span class="text-danger">¥{{ order.total_amount }}</span></p>
+                        {% if order.rider %}
+                            <p class="mb-0"><strong>骑手：</strong>{{ order.rider.real_name }}</p>
+                        {% endif %}
                     </div>
-                </div>
-            </div>
-            <div class="card-footer d-flex justify-content-between align-items-center">
-                <div>
-                    本店商品合计：<span class="text-danger fw-bold">¥{{ order.merchant_subtotal }}</span>
-                </div>
-                <div>
-                    <a href="{% url 'merchants:order_detail' order.pk %}" class="btn btn-outline-primary btn-sm">查看详情</a>
-                    {% if order.status == 2 %}
-                        <a href="{% url 'merchants:order_ship' order.pk %}" class="btn btn-success btn-sm" 
-                           onclick="return confirm('确认发货？')">确认发货</a>
-                    {% endif %}
+                    <div class="col-md-3 text-end">
+                        <a href="{% url 'merchants:order_detail' order.pk %}" class="btn btn-outline-primary btn-sm">查看详情</a>
+                        {% if order.status == 2 %}
+                            <form method="post" action="{% url 'merchants:order_ship' order.pk %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('确认发货？')">确认发货</button>
+                            </form>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>

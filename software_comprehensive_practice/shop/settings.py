@@ -9,12 +9,14 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-shop-system-dev-key-change-in-production'
+# 生产环境请使用环境变量设置 SECRET_KEY
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-shop-system-dev-key-change-in-production')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# 生产环境请设置 DJANGO_DEBUG=False
+DEBUG = os.environ.get('DJANGO_DEBUG', 'True').lower() in ('true', '1', 'yes')
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '').split(',') if os.environ.get('DJANGO_ALLOWED_HOSTS') else ['*']
 
 # Application definition
 INSTALLED_APPS = [
@@ -40,6 +42,9 @@ INSTALLED_APPS = [
     'apps.payments',
     'apps.reviews',
     'apps.merchants',
+    'apps.riders',
+    'apps.management',
+    'apps.favorites',
 ]
 
 MIDDLEWARE = [
@@ -137,10 +142,17 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 12,
 }
 
+# CSRF settings
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+]
+
 # CORS settings
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
     'http://127.0.0.1:3000',
     'file://',
 ]
-CORS_ALLOW_ALL_ORIGINS = True  # 开发环境允许所有来源
+# 开发环境允许所有来源，生产环境请设置为 False 并配置 CORS_ALLOWED_ORIGINS
+CORS_ALLOW_ALL_ORIGINS = os.environ.get('CORS_ALLOW_ALL_ORIGINS', 'True').lower() in ('true', '1', 'yes')

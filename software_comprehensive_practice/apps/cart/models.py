@@ -18,8 +18,12 @@ class Cart(models.Model):
 
     @property
     def total_price(self):
-        """计算购物车总价"""
-        return sum(item.subtotal for item in self.items.all())
+        """计算购物车总价（使用动态价格）"""
+        from decimal import Decimal
+        total = Decimal('0')
+        for item in self.items.all():
+            total += item.subtotal
+        return total
 
     @property
     def total_quantity(self):
@@ -45,5 +49,7 @@ class CartItem(models.Model):
 
     @property
     def subtotal(self):
-        """计算小计"""
-        return self.goods.price * self.quantity
+        """计算小计（使用动态价格）"""
+        from decimal import Decimal
+        current_price = Decimal(str(self.goods.current_price))
+        return current_price * self.quantity

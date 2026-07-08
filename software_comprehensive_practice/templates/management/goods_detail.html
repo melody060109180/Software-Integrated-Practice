@@ -1,0 +1,156 @@
+{% extends 'management/base.html' %}
+
+{% block title %}商品详情 - 系统管理{% endblock %}
+{% block nav_goods %}active{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0">
+        <i class="bi bi-box-seam"></i> 商品详情
+    </h4>
+    <a href="{% url 'management:goods_list' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> 返回列表
+    </a>
+</div>
+
+<div class="row">
+    <!-- 商品信息 -->
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">商品信息</h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    {% if goods.image %}
+                        <img src="{{ goods.image.url }}" alt="{{ goods.name }}" 
+                             class="rounded" style="max-width: 200px; max-height: 200px; object-fit: cover;">
+                    {% else %}
+                        <div class="rounded bg-light d-inline-flex align-items-center justify-content-center" 
+                             style="width: 200px; height: 200px;">
+                            <i class="bi bi-image text-muted" style="font-size: 4rem;"></i>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <h5>{{ goods.name }}</h5>
+                <p class="text-muted">{{ goods.description|truncatechars:100 }}</p>
+                
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <strong>分类：</strong> {{ goods.category.name|default:"未分类" }}
+                    </li>
+                    <li class="mb-2">
+                        <strong>价格：</strong> <span class="text-danger fw-bold">¥{{ goods.price }}</span>
+                    </li>
+                    <li class="mb-2">
+                        <strong>库存：</strong>
+                        {% if goods.stock <= 0 %}
+                            <span class="text-danger">{{ goods.stock }} (缺货)</span>
+                        {% elif goods.stock <= 10 %}
+                            <span class="text-warning">{{ goods.stock }} (库存紧张)</span>
+                        {% else %}
+                            {{ goods.stock }}
+                        {% endif %}
+                    </li>
+                    <li class="mb-2">
+                        <strong>销量：</strong> {{ goods.sales }}
+                    </li>
+                    <li class="mb-2">
+                        <strong>商家：</strong> {{ goods.merchant_goods.merchant.shop_name|default:"-" }}
+                    </li>
+                    <li class="mb-2">
+                        <strong>状态：</strong>
+                        {% if goods.is_active %}
+                            <span class="badge bg-success">上架中</span>
+                        {% else %}
+                            <span class="badge bg-secondary">已下架</span>
+                        {% endif %}
+                    </li>
+                    <li class="mb-2">
+                        <strong>创建时间：</strong> {{ goods.created_at|date:"Y-m-d H:i:s" }}
+                    </li>
+                    <li class="mb-2">
+                        <strong>更新时间：</strong> {{ goods.updated_at|date:"Y-m-d H:i:s" }}
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- 操作按钮 -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">操作</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" id="actionForm">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" id="actionInput">
+                    
+                    <button type="button" class="btn btn-warning w-100 mb-2" onclick="setAction('toggle_active')">
+                        {% if goods.is_active %}
+                            <i class="bi bi-arrow-down-circle"></i> 下架商品
+                        {% else %}
+                            <i class="bi bi-arrow-up-circle"></i> 上架商品
+                        {% endif %}
+                    </button>
+                    
+                    <button type="button" class="btn btn-danger w-100" onclick="confirmDelete()">
+                        <i class="bi bi-trash"></i> 删除商品
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 商品评价 -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-star"></i> 商品评价</h5>
+                <span class="badge bg-primary">{{ goods_reviews.count }} 条评价</span>
+            </div>
+            <div class="card-body">
+                {% for review in goods_reviews %}
+                    <div class="border-bottom pb-3 mb-3">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <strong>{{ review.user.username }}</strong>
+                                <span class="text-warning ms-2">
+                                    {% for i in "12345" %}
+                                        {% if forloop.counter <= review.rating %}
+                                            <i class="bi bi-star-fill"></i>
+                                        {% else %}
+                                            <i class="bi bi-star"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                </span>
+                            </div>
+                            <small class="text-muted">{{ review.created_at|date:"Y-m-d H:i" }}</small>
+                        </div>
+                        <p class="mb-0 mt-2">{{ review.content }}</p>
+                    </div>
+                {% empty %}
+                    <p class="text-center text-muted">暂无评价</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+function setAction(action) {
+    document.getElementById('actionInput').value = action;
+    document.getElementById('actionForm').submit();
+}
+
+function confirmDelete() {
+    if (confirm('确定要删除该商品吗？此操作不可恢复！')) {
+        document.getElementById('actionInput').value = 'delete';
+        document.getElementById('actionForm').submit();
+    }
+}
+</script>
+{% endblock %}
+{% endblock %}

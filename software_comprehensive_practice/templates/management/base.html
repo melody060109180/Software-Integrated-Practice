@@ -1,0 +1,154 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}系统管理后台{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+    <style>
+        .sidebar {
+            min-height: 100vh;
+            background: linear-gradient(180deg, #0f2027, #203a43, #2c5364);
+        }
+        .sidebar .nav-link {
+            color: rgba(255,255,255,.65);
+            padding: 12px 20px;
+            border-left: 3px solid transparent;
+            font-size: 0.9rem;
+            border-radius: 0 8px 8px 0;
+            margin-right: 8px;
+        }
+        .sidebar .nav-link.active {
+            color: #fff;
+            background: rgba(255,255,255,.1);
+            border-left-color: #0dcaf0;
+        }
+        .sidebar .nav-link:hover {
+            color: #fff;
+            background: rgba(255,255,255,.05);
+        }
+        .sidebar .nav-link i {
+            width: 24px;
+            margin-right: 10px;
+        }
+        .stat-card {
+            border: none;
+            border-radius: 12px;
+            border-left: 4px solid;
+            transition: transform 0.2s;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+        .stat-card .card-body {
+            padding: 1.2rem;
+        }
+        .stat-card h6 {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .stat-card h3 {
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+        .stat-card.primary { border-color: #0d6efd; }
+        .stat-card.success { border-color: #198754; }
+        .stat-card.warning { border-color: #ffc107; }
+        .stat-card.info { border-color: #0dcaf0; }
+        .stat-card.danger { border-color: #dc3545; }
+        .stat-card.purple { border-color: #6f42c1; }
+        .sidebar-brand {
+            background: rgba(0,0,0,0.2);
+            margin: 0 -20px;
+            padding: 20px;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <nav class="col-md-2 sidebar d-none d-md-block">
+                <div class="position-sticky pt-3">
+                    <div class="sidebar-brand text-center">
+                        <h5 class="text-white mb-1" style="font-weight:700;">
+                            <i class="bi bi-shield-lock"></i> 系统管理
+                        </h5>
+                        <small style="color:rgba(255,255,255,0.5);">{{ user.username }}</small>
+                    </div>
+                    <ul class="nav flex-column mt-3">
+                        <li class="nav-item">
+                            <a class="nav-link {% block nav_dashboard %}{% endblock %}" href="{% url 'management:dashboard' %}">
+                                <i class="bi bi-speedometer2"></i> 数据概览
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% block nav_users %}{% endblock %}" href="{% url 'management:user_list' %}">
+                                <i class="bi bi-people"></i> 用户管理
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% block nav_merchants %}{% endblock %}" href="{% url 'management:merchant_list' %}">
+                                <i class="bi bi-shop"></i> 商家管理
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% block nav_goods %}{% endblock %}" href="{% url 'management:goods_list' %}">
+                                <i class="bi bi-box-seam"></i> 商品管理
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% block nav_orders %}{% endblock %}" href="{% url 'management:order_list' %}">
+                                <i class="bi bi-receipt"></i> 订单管理
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% block nav_settings %}{% endblock %}" href="{% url 'management:settings' %}">
+                                <i class="bi bi-gear"></i> 系统设置
+                            </a>
+                        </li>
+                        <li class="nav-item mt-4">
+                            <a class="nav-link" href="{% url 'goods:index' %}" target="_blank">
+                                <i class="bi bi-box-arrow-up-right"></i> 访问前台
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'merchants:dashboard' %}">
+                                <i class="bi bi-shop"></i> 商家后台
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <form method="post" action="{% url 'users:logout' %}">
+                                {% csrf_token %}
+                                <button type="submit" class="nav-link text-danger" style="background:none;border:none;width:100%;text-align:left;cursor:pointer;">
+                                    <i class="bi bi-box-arrow-left"></i> 退出登录
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+            
+            <main class="col-md-10 ms-auto py-4">
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+                
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

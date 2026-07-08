@@ -1,0 +1,113 @@
+{% extends 'management/base.html' %}
+
+{% block title %}系统设置 - 系统管理{% endblock %}
+{% block nav_settings %}active{% endblock %}
+
+{% block content %}
+<h4 class="mb-4"><i class="bi bi-gear"></i> 系统设置</h4>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">基本信息</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="site_name" class="form-label">网站名称</label>
+                        <input type="text" class="form-control" id="site_name" name="site_name" 
+                               value="{{ site_name }}">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="site_description" class="form-label">网站描述</label>
+                        <textarea class="form-control" id="site_description" name="site_description" 
+                                  rows="3">{{ site_description }}</textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle"></i> 保存设置
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">系统信息</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-bordered mb-0">
+                    <tr>
+                        <td><strong>Django 版本</strong></td>
+                        <td>4.2</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Python 版本</strong></td>
+                        <td>3.10+</td>
+                    </tr>
+                    <tr>
+                        <td><strong>数据库</strong></td>
+                        <td>SQLite</td>
+                    </tr>
+                    <tr>
+                        <td><strong>调试模式</strong></td>
+                        <td>
+                            {% if debug %}
+                                <span class="badge bg-warning">开启</span>
+                            {% else %}
+                                <span class="badge bg-success">关闭</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">快捷操作</h5>
+            </div>
+            <div class="card-body">
+                <a href="{% url 'management:dashboard' %}" class="btn btn-outline-primary w-100 mb-2">
+                    <i class="bi bi-speedometer2"></i> 数据概览
+                </a>
+                <a href="{% url 'management:user_list' %}" class="btn btn-outline-primary w-100 mb-2">
+                    <i class="bi bi-people"></i> 用户管理
+                </a>
+                <a href="{% url 'management:merchant_list' %}" class="btn btn-outline-primary w-100 mb-2">
+                    <i class="bi bi-shop"></i> 商家管理
+                </a>
+                <a href="{% url 'management:goods_list' %}" class="btn btn-outline-primary w-100 mb-2">
+                    <i class="bi bi-box-seam"></i> 商品管理
+                </a>
+                <a href="{% url 'management:order_list' %}" class="btn btn-outline-primary w-100">
+                    <i class="bi bi-receipt"></i> 订单管理
+                </a>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">帮助</h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-2">
+                    <i class="bi bi-info-circle text-info"></i> 
+                    如需修改更多系统配置，请编辑 <code>shop/settings.py</code> 文件。
+                </p>
+                <p class="mb-0">
+                    <i class="bi bi-info-circle text-info"></i> 
+                    系统使用 Django Admin 进行高级管理，访问 
+                    <a href="/admin/" target="_blank">/admin/</a>。
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

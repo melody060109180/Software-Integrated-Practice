@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
+from django.db import transaction
 from .models import Order, OrderItem
 from apps.cart.models import Cart
 from apps.users.models import Address
@@ -38,7 +39,7 @@ def checkout(request):
 def order_list(request):
     """订单列表"""
     status = request.GET.get('status')
-    orders = Order.objects.filter(user=request.user)
+    orders = Order.objects.filter(user=request.user).prefetch_related('items', 'items__goods')
     
     if status:
         orders = orders.filter(status=status)
@@ -103,32 +104,34 @@ def create_order(request):
         address_id = request.POST.get('address_id')
         address = get_object_or_404(Address, pk=address_id, user=request.user)
         
-        # 创建订单
-        order = Order.objects.create(
-            user=request.user,
-            total_amount=cart.total_price,
-            receiver_name=address.name,
-            receiver_phone=address.phone,
-            receiver_address=address.full_address(),
-            remark=request.POST.get('remark', ''),
-        )
-        
-        # 创建订单商品并扣减库存
-        for item in cart_items:
-            OrderItem.objects.create(
-                order=order,
-                goods=item.goods,
-                goods_name=item.goods.name,
-                goods_price=item.goods.price,
-                goods_image=item.goods.image.url if item.goods.image else '',
-                quantity=item.quantity,
+        # 使用事务保护订单创建过程
+        with transaction.atomic():
+            # 创建订单
+            order = Order.objects.create(
+                user=request.user,
+                total_amount=cart.total_price,
+                receiver_name=address.name,
+                receiver_phone=address.phone,
+                receiver_address=address.full_address(),
+                remark=request.POST.get('remark', ''),
             )
-            # 扣减库存
-            item.goods.stock -= item.quantity
-            item.goods.save()
-        
-        # 清空购物车
-        cart.items.all().delete()
+            
+            # 创建订单商品并扣减库存
+            for item in cart_items:
+                OrderItem.objects.create(
+                    order=order,
+                    goods=item.goods,
+                    goods_name=item.goods.name,
+                    goods_price=item.goods.current_price,  # 使用动态价格
+                    goods_image=item.goods.image.url if item.goods.image else '',
+                    quantity=item.quantity,
+                )
+                # 扣减库存
+                item.goods.stock -= item.quantity
+                item.goods.save()
+            
+            # 清空购物车
+            cart.items.all().delete()
         
         messages.success(request, '订单创建成功！')
         return redirect('payments:pay', order_id=order.pk)

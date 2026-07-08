@@ -38,7 +38,12 @@
             {% for goods in goods %}
                 <div class="col-md-3 mb-4">
                     <a href="{% url 'goods:detail' goods.pk %}" class="text-decoration-none">
-                        <div class="card h-100">
+                        <div class="card h-100 position-relative">
+                            {% if goods.discount_text %}
+                                <span class="badge bg-danger position-absolute top-0 end-0 m-2" style="z-index:10;">
+                                    {{ goods.discount_text }}
+                                </span>
+                            {% endif %}
                             {% if goods.image %}
                                 <img src="{{ goods.image.url }}" class="card-img-top" alt="{{ goods.name }}" style="height: 200px; object-fit: cover;">
                             {% else %}
@@ -49,9 +54,29 @@
                             <div class="card-body">
                                 <h6 class="card-title text-truncate">{{ goods.name }}</h6>
                                 <div class="d-flex justify-content-between align-items-end">
-                                    <span class="price-main">{{ goods.price }}</span>
+                                    <div>
+                                        {% if goods.discount_rate < 1 %}
+                                            <span class="text-muted text-decoration-line-through" style="font-size: 0.8rem;">¥{{ goods.price }}</span>
+                                            <span class="price-main" style="color: #ff4d4f;">¥{{ goods.current_price }}</span>
+                                        {% else %}
+                                            <span class="price-main">¥{{ goods.price }}</span>
+                                        {% endif %}
+                                    </div>
                                     <span class="sales-text">已售{{ goods.sales }}件</span>
                                 </div>
+                                {% if goods.days_until_expiry is not None and goods.days_until_expiry <= 14 %}
+                                    <div class="mt-1">
+                                        <small class="text-muted">
+                                            {% if goods.days_until_expiry < 0 %}
+                                                <span class="text-danger">已过期</span>
+                                            {% elif goods.days_until_expiry == 0 %}
+                                                <span class="text-danger">今日到期</span>
+                                            {% else %}
+                                                <span class="text-warning">剩余{{ goods.days_until_expiry }}天</span>
+                                            {% endif %}
+                                        </small>
+                                    </div>
+                                {% endif %}
                             </div>
                         </div>
                     </a>

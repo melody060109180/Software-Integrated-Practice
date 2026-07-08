@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block title %}我的收藏 - 在线商城{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0"><i class="bi bi-heart-fill text-danger me-2"></i>我的收藏</h4>
+    <span class="badge bg-secondary">{{ favorites|length }} 件商品</span>
+</div>
+
+{% if favorites %}
+    <div class="row">
+        {% for item in favorites %}
+            <div class="col-md-3 mb-4">
+                <div class="card h-100 position-relative">
+                    {% if item.goods.discount_text %}
+                        <span class="badge bg-danger position-absolute top-0 end-0 m-2" style="z-index:10;">
+                            {{ item.goods.discount_text }}
+                        </span>
+                    {% endif %}
+                    
+                    {% if item.goods.image %}
+                        <a href="{% url 'goods:detail' item.goods.pk %}">
+                            <img src="{{ item.goods.image.url }}" class="card-img-top" alt="{{ item.goods.name }}" style="height: 200px; object-fit: cover;">
+                        </a>
+                    {% else %}
+                        <a href="{% url 'goods:detail' item.goods.pk %}">
+                            <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
+                            </div>
+                        </a>
+                    {% endif %}
+                    
+                    <div class="card-body">
+                        <h6 class="card-title text-truncate">
+                            <a href="{% url 'goods:detail' item.goods.pk %}" class="text-decoration-none text-dark">
+                                {{ item.goods.name }}
+                            </a>
+                        </h6>
+                        
+                        <div class="d-flex justify-content-between align-items-end">
+                            <div>
+                                {% if item.goods.discount_rate < 1 %}
+                                    <span class="text-muted text-decoration-line-through" style="font-size: 0.8rem;">¥{{ item.goods.price }}</span>
+                                    <span class="price-main" style="color: #ff4d4f;">¥{{ item.goods.current_price }}</span>
+                                {% else %}
+                                    <span class="price-main">¥{{ item.goods.price }}</span>
+                                {% endif %}
+                            </div>
+                            <span class="sales-text">已售{{ item.goods.sales }}件</span>
+                        </div>
+                        
+                        <div class="mt-2">
+                            <small class="text-muted">收藏于 {{ item.created_at|date:"m-d H:i" }}</small>
+                        </div>
+                    </div>
+                    
+                    <div class="card-footer bg-white border-0 pt-0">
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'goods:detail' item.goods.pk %}" class="btn btn-outline-primary btn-sm flex-grow-1">
+                                <i class="bi bi-eye"></i> 查看
+                            </a>
+                            <form method="post" action="{% url 'favorites:remove' item.id %}" class="d-inline flex-grow-1"
+                                  onsubmit="return confirm('确定取消收藏？')">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline-danger btn-sm w-100">
+                                    <i class="bi bi-heart-fill"></i> 取消
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="text-center py-5">
+        <i class="bi bi-heart" style="font-size: 4rem; color: #ddd;"></i>
+        <h5 class="mt-3 text-muted">还没有收藏商品</h5>
+        <p class="text-muted">去发现心仪的商品吧</p>
+        <a href="{% url 'goods:list' %}" class="btn btn-primary">
+            <i class="bi bi-grid me-2"></i>浏览商品
+        </a>
+    </div>
+{% endif %}
+{% endblock %}

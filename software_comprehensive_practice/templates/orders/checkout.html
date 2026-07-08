@@ -64,9 +64,16 @@
                                             {{ item.goods.name }}
                                         </div>
                                     </td>
-                                    <td>¥{{ item.goods.price }}</td>
+                                    <td>
+                                        {% if item.goods.discount_rate < 1 %}
+                                            <span class="text-muted text-decoration-line-through" style="font-size: 0.8rem;">¥{{ item.goods.price }}</span><br>
+                                            <span>¥{{ item.goods.current_price }}</span>
+                                        {% else %}
+                                            ¥{{ item.goods.price }}
+                                        {% endif %}
+                                    </td>
                                     <td>{{ item.quantity }}</td>
-                                    <td class="text-danger">¥{{ item.subtotal }}</td>
+                                    <td class="text-danger">¥{{ item.subtotal|floatformat:2 }}</td>
                                 </tr>
                             {% endfor %}
                         </tbody>
@@ -90,7 +97,7 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between mb-2">
                         <span>商品金额</span>
-                        <span>¥{{ total_price }}</span>
+                        <span>¥{{ total_price|floatformat:2 }}</span>
                     </div>
                     <div class="d-flex justify-content-between mb-2">
                         <span>运费</span>
@@ -99,7 +106,7 @@
                     <hr>
                     <div class="d-flex justify-content-between">
                         <span class="fw-bold">合计</span>
-                        <span class="text-danger fw-bold" style="font-size: 1.5rem;">¥{{ total_price }}</span>
+                        <span class="text-danger fw-bold" style="font-size: 1.5rem;">¥{{ total_price|floatformat:2 }}</span>
                     </div>
                     <button type="submit" class="btn btn-primary w-100 mt-3" {% if not addresses %}disabled{% endif %}>
                         提交订单

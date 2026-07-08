@@ -41,52 +41,51 @@ def login_view(request):
 
 
 def unified_login(request):
-    """统一登录页面 - 区分用户、商家、管理员"""
+    """统一登录页面 - 区分用户、管理员、骑手"""
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
         login_type = request.POST.get('login_type', 'user')
-        
+
         user = authenticate(request, username=username, password=password)
-        
+
         if user is not None:
-            # 根据登录类型验证身份
             if login_type == 'user':
-                # 普通用户：不能是商家或管理员
-                if hasattr(user, 'merchant'):
-                    messages.error(request, '该账号是商家账号，请选择商家登录！')
-                elif user.is_staff:
+                # 普通用户
+                if user.is_staff:
                     messages.error(request, '该账号是管理员账号，请选择管理员登录！')
+                elif hasattr(user, 'rider'):
+                    messages.error(request, '该账号是骑手账号，请选择"骑手"登录！')
                 else:
                     login(request, user)
                     _merge_session_cart(request, user)
                     messages.success(request, '用户登录成功！')
                     return redirect(request.GET.get('next', 'goods:list'))
-            
-            elif login_type == 'merchant':
-                # 商家：必须有merchant属性
-                if hasattr(user, 'merchant'):
-                    login(request, user)
-                    messages.success(request, '商家登录成功！')
-                    return redirect('merchants:dashboard')
-                elif user.is_staff:
-                    messages.error(request, '该账号是管理员账号，请选择管理员登录！')
-                else:
-                    messages.error(request, '该账号不是商家账号，请先注册商家！')
-            
+
             elif login_type == 'admin':
                 # 管理员：必须是staff
                 if user.is_staff:
                     login(request, user)
                     messages.success(request, '管理员登录成功！')
-                    return redirect('admin:index')
-                elif hasattr(user, 'merchant'):
-                    messages.error(request, '该账号是商家账号，请选择商家登录！')
+                    return redirect('merchants:dashboard')
+                elif hasattr(user, 'rider'):
+                    messages.error(request, '该账号是骑手账号，请选择"骑手"登录！')
                 else:
                     messages.error(request, '该账号没有管理员权限！')
+
+            elif login_type == 'rider':
+                # 骑手：必须有rider属性
+                if hasattr(user, 'rider'):
+                    login(request, user)
+                    messages.success(request, '骑手登录成功！')
+                    return redirect('riders:dashboard')
+                elif user.is_staff:
+                    messages.error(request, '该账号是管理员账号，请选择"管理员"登录！')
+                else:
+                    messages.error(request, '该账号不是骑手账号，请先注册骑手！')
         else:
-            messages.error(request, '用户名或密码错误！')
-    
+            messages.error(request, '用户名/手机号或密码错误！')
+
     return render(request, 'users/unified_login.html')
 
 

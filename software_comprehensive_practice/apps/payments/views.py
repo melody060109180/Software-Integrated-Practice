@@ -31,16 +31,21 @@ def payment_success(request, order_id):
     """支付成功"""
     order = get_object_or_404(Order, pk=order_id, user=request.user)
     payment = get_object_or_404(Payment, order=order)
-    
+
+    # 保存支付方式
+    method = request.POST.get('payment_method')
+    if method and method.isdigit():
+        payment.method = int(method)
+
     # 模拟支付成功
     payment.status = 2
     payment.paid_at = timezone.now()
     payment.save()
-    
+
     order.status = 2
     order.paid_at = timezone.now()
     order.save()
-    
+
     messages.success(request, '支付成功！')
     return redirect('orders:detail', pk=order_id)
 

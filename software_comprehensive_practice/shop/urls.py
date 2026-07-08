@@ -36,6 +36,9 @@ urlpatterns = [
     path('payments/', include('apps.payments.urls', namespace='payments')),
     path('reviews/', include('apps.reviews.urls', namespace='reviews')),
     path('merchant/', include('apps.merchants.urls', namespace='merchants')),
+    path('rider/', include('apps.riders.urls', namespace='riders')),
+    path('admin-panel/', include('apps.management.urls', namespace='management')),
+    path('favorites/', include('apps.favorites.urls', namespace='favorites')),
     path('login/', lambda request: redirect('users:unified_login'), name='login_redirect'),
     
     # API URLs - Users

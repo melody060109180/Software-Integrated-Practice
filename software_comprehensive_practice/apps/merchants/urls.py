@@ -4,9 +4,6 @@ from . import views
 app_name = 'merchants'
 
 urlpatterns = [
-    path('register/', views.merchant_register, name='register'),
-    path('login/', views.merchant_login, name='login'),
-    path('logout/', views.merchant_logout, name='logout'),
     path('', views.dashboard, name='dashboard'),
     path('profile/', views.profile, name='profile'),
     path('profile/edit/', views.profile_edit, name='profile_edit'),
@@ -18,4 +15,7 @@ urlpatterns = [
     path('orders/', views.order_list, name='order_list'),
     path('orders/<int:pk>/', views.order_detail, name='order_detail'),
     path('orders/<int:pk>/ship/', views.order_ship, name='order_ship'),
+    path('orders/<int:pk>/assign/', views.assign_rider, name='assign_rider'),
+    path('orders/<int:pk>/auto-assign/', views.auto_assign, name='auto_assign'),
+    path('riders/', views.rider_list, name='rider_list'),
 ]
